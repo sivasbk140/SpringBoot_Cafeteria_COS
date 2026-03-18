@@ -1,44 +1,52 @@
-package net.breezeware.Spring_Boot_Cafteria.user.entity;
-
+package net.breezeware.Spring_Boot_Cafeteria.user.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-import net.breezeware.Spring_Boot_Cafteria.order.entity.Order;
-import net.breezeware.Spring_Boot_Cafteria.user.enumeration.Role;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 @Entity
 @Table(name = "users")
 @Data
+@NoArgsConstructor
+@RequiredArgsConstructor
+@ToString(exclude = {"orders", "deliveryDetails"})
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(nullable = false)
+    @NotBlank(message = "Name is required")
+    @NonNull
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Email
-    @Column(name = "email", nullable = false, unique = true)
+    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email is required")
+    @NonNull
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @NotBlank(message = "Password is required")
+    @NonNull
     @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Role is required")
+    @NonNull
+    @Column(nullable = false)
     private Role role;
 
-    @NotBlank
-    @Column(name = "location", nullable = false)
-    private String location;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<net.breezeware.Spring_Boot_Cafeteria.order.entity.Order> orders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeliveryDetail> deliveryDetails = new ArrayList<>();
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -48,9 +56,48 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Order> orders = new ArrayList<>();
+    @PrePersist
+    protected void onCreate() {
+        createdOn = new Date();
+        updatedOn = new Date();
+    }
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<DeliveryDetail> deliveryDetails = new ArrayList<>();
+    @PreUpdate
+    protected void onUpdate() {
+        updatedOn = new Date();
+    }
+
+    // Helper methods
+    public void addOrder(net.breezeware.Spring_Boot_Cafeteria.order.entity.Order order) {
+        orders.add(order);
+        order.setUser(this);
+    }
+
+    public void removeOrder(net.breezeware.Spring_Boot_Cafeteria.order.entity.Order order) {
+        orders.remove(order);
+        order.setUser(null);
+    }
+
+    public void addDeliveryDetail(DeliveryDetail deliveryDetail) {
+        deliveryDetails.add(deliveryDetail);
+        deliveryDetail.setUser(this);
+    }
+
+    public void removeDeliveryDetail(DeliveryDetail deliveryDetail) {
+        deliveryDetails.remove(deliveryDetail);
+        deliveryDetail.setUser(null);
+    }
+
+    // Business logic
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
+    }
+
+    public boolean isStaff() {
+        return role == Role.STAFF;
+    }
+
+    public boolean isCustomer() {
+        return role == Role.CUSTOMER;
+    }
 }

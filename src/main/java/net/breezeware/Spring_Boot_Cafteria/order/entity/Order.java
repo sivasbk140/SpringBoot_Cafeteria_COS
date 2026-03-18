@@ -1,39 +1,37 @@
-package net.breezeware.Spring_Boot_Cafteria.order.entity;
+package net.breezeware.Spring_Boot_Cafeteria.order.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import net.breezeware.Spring_Boot_Cafteria.order.enumeration.OrderStatus;
-import net.breezeware.Spring_Boot_Cafteria.user.entity.User;
-
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 @Entity
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Table(name = "order_table")
+@Data
+@NoArgsConstructor
+@RequiredArgsConstructor
+@ToString(exclude = {"user", "items"})
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long Id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotBlank
     @JoinColumn(name = "user_id", nullable = false)
-    private User userId;
+    @NotNull(message = "User is required")
+    @NonNull
+    private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status",nullable = false)
+    @Column(nullable = false)
+    @NotNull(message = "Status is required")
+    @NonNull
     private OrderStatus status;
-
 
     @OneToMany(
             mappedBy = "order",
@@ -42,7 +40,6 @@ public class Order {
             fetch = FetchType.LAZY
     )
     private List<OrderItem> items = new ArrayList<>();
-
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -64,4 +61,40 @@ public class Order {
     }
 
 
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+    }
+
+
+    public Double getTotalPrice() {
+        return items.stream()
+                .mapToDouble(OrderItem::getTotalPrice)
+                .sum();
+    }
+
+    public int getItemCount() {
+        return items.size();
+    }
+
+    public boolean isEmpty() {
+        return items.isEmpty();
+    }
+
+    public boolean canBeCancelled() {
+        return status.isCancellable();
+    }
+
+    public boolean isActive() {
+        return status.isActive();
+    }
+
+    public boolean isCompleted() {
+        return status.isCompleted();
+    }
 }

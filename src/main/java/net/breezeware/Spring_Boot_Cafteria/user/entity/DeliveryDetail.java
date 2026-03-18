@@ -1,41 +1,45 @@
-package net.breezeware.Spring_Boot_Cafteria.user.entity;
+package net.breezeware.Spring_Boot_Cafeteria.user.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.util.Date;
 
-
 @Entity
-@Table(name = "Delivery_Details")
+@Table(name = "delivery_details")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
+@ToString(exclude = "user")
 public class DeliveryDetail {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @NotNull(message = "User is required")
+    @NonNull
     private User user;
 
-    @NotBlank
-    @Column(nullable = false)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @NonNull
+    @Column(nullable = false, length = 100)
     private String email;
-
 
     @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^[0-9]{10}$", message = "Phone must be 10 digits")
+    @NonNull
     @Column(name = "phone_number", nullable = false, length = 15)
     private String phoneNumber;
 
-    @NotBlank
-    @Column(name = "location", nullable = false)
+    @NotBlank(message = "Location is required")
+    @Size(min = 5, max = 500, message = "Location must be between 5-500 characters")
+    @NonNull
+    @Column(nullable = false, length = 500)
     private String location;
 
     @Column(name = "created_on", updatable = false)
@@ -45,7 +49,6 @@ public class DeliveryDetail {
     @Column(name = "updated_on")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
-
 
     @PrePersist
     protected void onCreate() {
@@ -57,9 +60,4 @@ public class DeliveryDetail {
     protected void onUpdate() {
         updatedOn = new Date();
     }
-
-
-
-
-
 }

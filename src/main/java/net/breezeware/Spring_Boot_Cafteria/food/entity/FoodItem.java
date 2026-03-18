@@ -1,36 +1,43 @@
-package net.breezeware.Spring_Boot_Cafteria.food.entity;
+package net.breezeware.Spring_Boot_Cafeteria.food.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.util.Date;
 
-
 @Entity
-@Table(name="food_item")
+@Table(name = "food_item")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @RequiredArgsConstructor
+public class FoodItem {
 
-public class FoodItem
-{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(name = "name",nullable = false)
+    @NotBlank(message = "Name is required")
+    @NonNull
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @NotBlank
-    @Column(name = "price",nullable = false)
+    @Positive(message = "Price must be positive")
+    @NonNull
+    @Column(nullable = false)
     private Double price;
 
+    @Min(value = 0, message = "Quantity cannot be negative")
+    @NonNull
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @NonNull
+    @Column(length = 50)
+    private String category;
+
+    @Column(length = 500)
+    private String description;
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -39,7 +46,6 @@ public class FoodItem
     @Column(name = "updated_on")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
-
 
     @PrePersist
     protected void onCreate() {
@@ -52,6 +58,23 @@ public class FoodItem
         updatedOn = new Date();
     }
 
+    // Business logic
+    public boolean isAvailable() {
+        return quantity > 0;
+    }
 
+    public boolean hasStock(int requestedQuantity) {
+        return quantity >= requestedQuantity;
+    }
 
+    public void reduceStock(int amount) {
+        if (amount > quantity) {
+            throw new IllegalArgumentException("Insufficient stock");
+        }
+        this.quantity -= amount;
+    }
+
+    public void restoreStock(int amount) {
+        this.quantity += amount;
+    }
 }

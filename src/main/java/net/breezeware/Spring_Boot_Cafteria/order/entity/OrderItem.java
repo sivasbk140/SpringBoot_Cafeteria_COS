@@ -1,44 +1,47 @@
-package net.breezeware.Spring_Boot_Cafteria.order.entity;
+package net.breezeware.Spring_Boot_Cafeteria.order.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodItem;
 
 import java.util.Date;
 
-
-
 @Entity
+@Table(name = "order_items")
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name ="order_items")
-public class OrderItem
-{
+@RequiredArgsConstructor
+@ToString(exclude = {"order", "foodItem"})
+public class OrderItem {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @JoinColumn(name="order_id",nullable = false)
-    private long orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    @NotNull(message = "Order is required")
+    @NonNull
+    private Order order;
 
-    @NotBlank
-    @OneToMany()
-    @JoinColumn(name ="   food_item_id",nullable = false)
-    private long foodIemId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_item_id", nullable = false)
+    @NotNull(message = "Food item is required")
+    @NonNull
+    private FoodItem foodItem;
 
+    @Positive(message = "Price must be positive")
+    @NotNull(message = "Price is required")
+    @NonNull
+    @Column(nullable = false)
+    private Double price;
 
-  @NotBlank
-  @Column(name = "price",nullable = false)
-  private Double price;
-
-  @NotBlank
-  @Column(name = "quantity",nullable = false)
-  private  Long quantity;
-
+    @Min(value = 1, message = "Quantity must be at least 1")
+    @NotNull(message = "Quantity is required")
+    @NonNull
+    @Column(nullable = false)
+    private Integer quantity;
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -47,7 +50,6 @@ public class OrderItem
     @Column(name = "updated_on")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
-
 
     @PrePersist
     protected void onCreate() {
@@ -61,5 +63,18 @@ public class OrderItem
     }
 
 
-}
+    public Double getTotalPrice() {
+        return price * quantity;
+    }
 
+    public void increaseQuantity(int amount) {
+        this.quantity += amount;
+    }
+
+    public void decreaseQuantity(int amount) {
+        if (this.quantity - amount < 1) {
+            throw new IllegalArgumentException("Quantity cannot be less than 1");
+        }
+        this.quantity -= amount;
+    }
+}

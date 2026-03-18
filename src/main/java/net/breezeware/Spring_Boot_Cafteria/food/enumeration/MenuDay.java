@@ -1,14 +1,19 @@
-package net.breezeware.Spring_Boot_Cafteria.food.enumeration;
+package net.breezeware.Spring_Boot_Cafeteria.food.entity;
 
 public enum MenuDay {
-
     MONDAY,
     TUESDAY,
     WEDNESDAY,
     THURSDAY,
     FRIDAY,
     SATURDAY,
-    SUNDAY,
-    ALLDAY;
-}
+    SUNDAY;
 
+    public static MenuDay fromString(String day) {
+        try {
+            return MenuDay.valueOf(day.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+}
