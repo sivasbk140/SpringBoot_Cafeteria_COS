@@ -1,4 +1,4 @@
-package net.breezeware.Spring_Boot_Cafeteria.food.entity;
+package net.breezeware.Spring_Boot_Cafeteria.food.enumeration;
 
 public enum MenuDay {
     MONDAY,

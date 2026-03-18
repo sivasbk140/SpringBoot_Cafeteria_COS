@@ -7,12 +7,12 @@ import lombok.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "availability_map")
+@Table(name = "food_menu_items_map")
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-@ToString(exclude = "menu")
-public class AvailabilityMap {
+@ToString(exclude = {"menu", "foodItem"})
+public class FoodMenuItemMap {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +22,16 @@ public class AvailabilityMap {
     @JoinColumn(name = "menu_id", nullable = false)
     @NotNull(message = "Menu is required")
     @NonNull
-    private FoodMenu menu;
+    private net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodMenu menu;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "menu_day", nullable = false)
-    @NotNull(message = "Menu day is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_item_id", nullable = false)
+    @NotNull(message = "Food item is required")
     @NonNull
-    private MenuDay menuDay;
+    private net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodItem foodItem;
+
+    @Column(name = "is_available", nullable = false)
+    private Boolean isAvailable = true;
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -42,10 +45,26 @@ public class AvailabilityMap {
     protected void onCreate() {
         createdOn = new Date();
         updatedOn = new Date();
+        if (isAvailable == null) {
+            isAvailable = true;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedOn = new Date();
+    }
+
+    // Business logic
+    public void toggleAvailability() {
+        this.isAvailable = !this.isAvailable;
+    }
+
+    public void makeAvailable() {
+        this.isAvailable = true;
+    }
+
+    public void makeUnavailable() {
+        this.isAvailable = false;
     }
 }

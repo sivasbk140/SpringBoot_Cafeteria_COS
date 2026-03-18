@@ -1,10 +1,10 @@
-package net.breezeware.Spring_Boot_Cafeteria.user.entity;
+package net.breezeware.Spring_Boot_Cafeteria.user.enumeration;
 
 public enum Role {
     ADMIN,
     STAFF,
     CUSTOMER,
-    DELIVERYSTAFF;
+    DELIVERY_STAFF;
 
     public static Role fromString(String role) {
         try {

@@ -3,10 +3,12 @@ package net.breezeware.Spring_Boot_Cafeteria.user.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
+import  net.breezeware.Spring_Boot_Cafeteria.user.enumeration.Role;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import net.breezeware.Spring_Boot_Cafeteria.order.entity.Order;
 
 @Entity
 @Table(name = "users")
@@ -68,12 +70,12 @@ public class User {
     }
 
     // Helper methods
-    public void addOrder(net.breezeware.Spring_Boot_Cafeteria.order.entity.Order order) {
+    public void addOrder(Order order) {
         orders.add(order);
         order.setUser(this);
     }
 
-    public void removeOrder(net.breezeware.Spring_Boot_Cafeteria.order.entity.Order order) {
+    public void removeOrder(Order order) {
         orders.remove(order);
         order.setUser(null);
     }

@@ -4,15 +4,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 import java.util.Date;
 
 @Entity
-@Table(name = "food_menu_items_map")
+@Table(name = "availability_map")
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-@ToString(exclude = {"menu", "foodItem"})
-public class FoodMenuItemMap {
+@ToString(exclude = "menu")
+public class AvailabilityMap {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,14 +25,11 @@ public class FoodMenuItemMap {
     @NonNull
     private FoodMenu menu;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "food_item_id", nullable = false)
-    @NotNull(message = "Food item is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "menu_day", nullable = false)
+    @NotNull(message = "Menu day is required")
     @NonNull
-    private FoodItem foodItem;
-
-    @Column(name = "is_available", nullable = false)
-    private Boolean isAvailable = true;
+    private MenuDay menuDay;
 
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -45,26 +43,10 @@ public class FoodMenuItemMap {
     protected void onCreate() {
         createdOn = new Date();
         updatedOn = new Date();
-        if (isAvailable == null) {
-            isAvailable = true;
-        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedOn = new Date();
-    }
-
-    // Business logic
-    public void toggleAvailability() {
-        this.isAvailable = !this.isAvailable;
-    }
-
-    public void makeAvailable() {
-        this.isAvailable = true;
-    }
-
-    public void makeUnavailable() {
-        this.isAvailable = false;
     }
 }

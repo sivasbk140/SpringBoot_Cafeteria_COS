@@ -1,4 +1,4 @@
-package net.breezeware.Spring_Boot_Cafteria;
+package net.breezeware.Spring_Boot_Cafeteria;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,6 +8,8 @@ public class Application {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
+
+
 	}
 
 }

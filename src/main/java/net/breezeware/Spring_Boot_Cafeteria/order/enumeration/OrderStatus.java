@@ -1,4 +1,4 @@
-package net.breezeware.Spring_Boot_Cafeteria.order.entity;
+package net.breezeware.Spring_Boot_Cafeteria.order.enumeration;
 
 public enum OrderStatus {
     PLACED_ORDER,

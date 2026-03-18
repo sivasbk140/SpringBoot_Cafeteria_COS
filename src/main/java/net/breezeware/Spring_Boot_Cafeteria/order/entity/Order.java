@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
 
+import net.breezeware.Spring_Boot_Cafeteria.order.enumeration.OrderStatus;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
