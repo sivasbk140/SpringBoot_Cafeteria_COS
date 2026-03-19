@@ -8,7 +8,7 @@ CREATE TABLE delivery_details (
     updated_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_user
         FOREIGN KEY (user_id)
-        REFERENCES "Users"(id)
+        REFERENCES "users"(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     UNIQUE (email, user_id)

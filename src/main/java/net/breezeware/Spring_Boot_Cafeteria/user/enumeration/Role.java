@@ -6,11 +6,5 @@ public enum Role {
     CUSTOMER,
     DELIVERY_STAFF;
 
-    public static Role fromString(String role) {
-        try {
-            return Role.valueOf(role.toUpperCase().trim());
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
+
 }

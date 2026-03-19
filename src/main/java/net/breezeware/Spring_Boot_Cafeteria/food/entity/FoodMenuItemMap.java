@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "food_menu_items_map")
@@ -21,7 +21,6 @@ public class FoodMenuItemMap {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
     @NotNull(message = "Menu is required")
-    @NonNull
     private net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodMenu menu;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,17 +33,15 @@ public class FoodMenuItemMap {
     private Boolean isAvailable = true;
 
     @Column(name = "created_on", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdOn;
+    private LocalDateTime createdOn;
 
     @Column(name = "updated_on")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedOn;
+    private LocalDateTime updatedOn;
 
     @PrePersist
     protected void onCreate() {
-        createdOn = new Date();
-        updatedOn = new Date();
+        createdOn = LocalDateTime.now();
+        updatedOn = LocalDateTime.now();
         if (isAvailable == null) {
             isAvailable = true;
         }
@@ -52,7 +49,7 @@ public class FoodMenuItemMap {
 
     @PreUpdate
     protected void onUpdate() {
-        updatedOn = new Date();
+        updatedOn = LocalDateTime.now();
     }
 
     // Business logic

@@ -8,7 +8,7 @@ CREATE TABLE order_items (
                              updated_on TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
                              CONSTRAINT fk_order
                                  FOREIGN KEY (order_id)
-                                     REFERENCES orders(id)
+                                     REFERENCES order_table(id)
                                      ON DELETE CASCADE,
                              CONSTRAINT fk_food_item
                                  FOREIGN KEY (food_item_id)

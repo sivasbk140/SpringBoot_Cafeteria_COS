@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "availability_map")
@@ -22,7 +22,6 @@ public class AvailabilityMap {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
     @NotNull(message = "Menu is required")
-    @NonNull
     private FoodMenu menu;
 
     @Enumerated(EnumType.STRING)
@@ -32,21 +31,19 @@ public class AvailabilityMap {
     private MenuDay menuDay;
 
     @Column(name = "created_on", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdOn;
+    private LocalDateTime createdOn;
 
     @Column(name = "updated_on")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedOn;
+    private LocalDateTime updatedOn;
 
     @PrePersist
     protected void onCreate() {
-        createdOn = new Date();
-        updatedOn = new Date();
+        createdOn = LocalDateTime.now();
+        updatedOn = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedOn = new Date();
+        updatedOn = LocalDateTime.now();
     }
 }

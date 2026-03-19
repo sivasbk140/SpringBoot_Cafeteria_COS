@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -32,22 +32,20 @@ public class FoodMenu {
     private List<AvailabilityMap> availabilities = new ArrayList<>();
 
     @Column(name = "created_on", updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdOn;
+    private LocalDateTime createdOn;
 
     @Column(name = "updated_on")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedOn;
+    private LocalDateTime updatedOn;
 
     @PrePersist
     protected void onCreate() {
-        createdOn = new Date();
-        updatedOn = new Date();
+        createdOn = LocalDateTime.now();
+        updatedOn = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedOn = new Date();
+        updatedOn = LocalDateTime.now();
     }
 
     // Helper methods

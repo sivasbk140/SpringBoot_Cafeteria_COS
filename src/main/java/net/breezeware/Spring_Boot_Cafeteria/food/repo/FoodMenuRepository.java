@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface FoodMenuRepository extends JpaRepository<FoodMenu, Long> {
 
-    Optional<FoodMenu> findByMenuId (Long id);
+    //Optional<FoodMenu> findByMenuId (Long id);
 
-    List<FoodMenu> findByDay (MenuDay menuDay);
+    List<FoodMenu> findByAvailabilities_MenuDay(MenuDay menuDay);
 
     List<FoodMenu> findByCategory (String category);
 
