@@ -1,5 +1,6 @@
 package net.breezeware.Spring_Boot_Cafeteria.food.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 
@@ -14,4 +15,7 @@ public class FoodMenuResponseDto {
     private String category;
     private List<FoodMenuItemMapResponseDto> items;
     private List<MenuDay> availableDays;
+
+    public FoodMenuResponseDto(@NotBlank(message = "Category is required") @NonNull String category) {
+    }
 }

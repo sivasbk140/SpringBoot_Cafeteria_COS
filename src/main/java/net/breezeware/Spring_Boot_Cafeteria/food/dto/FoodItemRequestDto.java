@@ -10,6 +10,10 @@ public class FoodItemRequestDto {
 
     private  Long id;
     private String name;
+    private Double price;
+    private String description;
+    private Integer quantity;
+    private String category;
 
 
 

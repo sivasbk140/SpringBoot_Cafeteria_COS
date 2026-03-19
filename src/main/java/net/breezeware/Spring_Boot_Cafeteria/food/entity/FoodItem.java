@@ -3,14 +3,16 @@ package net.breezeware.Spring_Boot_Cafeteria.food.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-
+@Slf4j
 @Entity
 @Table(name = "food_item")
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class FoodItem {
 
     @Id
@@ -47,6 +49,14 @@ public class FoodItem {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
 
+    public FoodItem(String name, Double price, Integer quantity, String category, String description) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+        this.category = category;
+        this.description = description;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdOn = new Date();
@@ -77,4 +87,5 @@ public class FoodItem {
     public void restoreStock(int amount) {
         this.quantity += amount;
     }
+
 }
