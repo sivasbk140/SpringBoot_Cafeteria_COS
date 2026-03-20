@@ -1,6 +1,7 @@
 package net.breezeware.Spring_Boot_Cafeteria.order.repo;
 
 import net.breezeware.Spring_Boot_Cafeteria.order.entity.Order;
+import net.breezeware.Spring_Boot_Cafeteria.order.enumeration.OrderStatus;
 import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,6 +13,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByUserId(Long userId);
 
-   // List<Order> findByStatus(String status);
+    List<Order> findByStatus(OrderStatus status);
 
 }
