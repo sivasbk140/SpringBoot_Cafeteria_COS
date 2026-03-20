@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.breezeware.Spring_Boot_Cafeteria.food.entity.MenuDay;
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 
 import java.util.List;
 

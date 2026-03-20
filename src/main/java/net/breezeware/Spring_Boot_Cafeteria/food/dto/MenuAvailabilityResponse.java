@@ -3,11 +3,10 @@ package net.breezeware.Spring_Boot_Cafeteria.food.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.breezeware.Spring_Boot_Cafeteria.food.entity.MenuDay;
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 
-/**
- * DTO for menu availability day response
- */
+// For Menu Availability
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -13,6 +13,6 @@ public interface FoodMenuRepository extends JpaRepository<FoodMenu, Long> {
 
     List<FoodMenu> findByAvailabilities_MenuDay(MenuDay menuDay);
 
-    List<FoodMenu> findByCategory (String category);
+    Optional<FoodMenu> findByCategory(String category);
 
 }

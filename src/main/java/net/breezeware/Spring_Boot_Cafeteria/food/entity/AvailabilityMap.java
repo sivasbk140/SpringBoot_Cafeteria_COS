@@ -22,6 +22,7 @@ public class AvailabilityMap {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
     @NotNull(message = "Menu is required")
+    @NonNull
     private FoodMenu menu;
 
     @Enumerated(EnumType.STRING)

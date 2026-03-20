@@ -2,7 +2,7 @@ package net.breezeware.Spring_Boot_Cafeteria.food.controller;
 
 import lombok.RequiredArgsConstructor;
 import net.breezeware.Spring_Boot_Cafeteria.food.dto.*;
-import net.breezeware.Spring_Boot_Cafeteria.food.entity.MenuDay;
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 import net.breezeware.Spring_Boot_Cafeteria.food.service.StaffFoodService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

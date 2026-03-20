@@ -5,7 +5,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class FoodMenuItemMapResponseDto {
+public class FoodMenuItemMapResponse {
     private Long id;
     private Long foodItemId;
     private String foodItemName;

@@ -21,6 +21,7 @@ public class FoodMenuItemMap {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "menu_id", nullable = false)
     @NotNull(message = "Menu is required")
+    @NonNull
     private net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodMenu menu;
 
     @ManyToOne(fetch = FetchType.LAZY)

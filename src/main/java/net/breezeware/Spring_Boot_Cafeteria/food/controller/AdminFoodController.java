@@ -3,7 +3,7 @@ package net.breezeware.Spring_Boot_Cafeteria.food.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.breezeware.Spring_Boot_Cafeteria.food.dto.*;
-import net.breezeware.Spring_Boot_Cafeteria.food.entity.MenuDay;
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 import net.breezeware.Spring_Boot_Cafeteria.food.service.AdminFoodService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FoodMenuItemMapRequestDto {
+public class FoodMenuItemMapRequest {
 
     @NotNull(message = "Food item ID is required")
     private Long foodItemId;
