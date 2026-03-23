@@ -1,5 +1,10 @@
 package net.breezeware.Spring_Boot_Cafeteria.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserRequestDto;
@@ -7,33 +12,44 @@ import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserResponseDto;
 import net.breezeware.Spring_Boot_Cafeteria.user.service.AdminUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
+@RestController
+@RequestMapping("/api/Admin")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class AdminUserController {
 
+    private final AdminUserService adminUserService;
 
-    @Slf4j
-    @RestController
-    @RequestMapping("/api/Admin")
-    @RequiredArgsConstructor
-    public class AdminUserController {
-
-        private final AdminUserService adminUserService;
-
-        @PostMapping("/register")
-        public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
-            log.info("Registering the Admin user ");
-            UserResponseDto response = adminUserService.registerUser(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        }
-
-        @PostMapping("/login")
-        public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto request) {
-            log.info("Logging in with mail and password ");
-            UserResponseDto response = adminUserService.login(request);
-            return ResponseEntity.ok(response);
-        }
-
+    @Operation(summary = "Register admin", description = "Registers a new admin account")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Admin registered successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
+        log.info("Registering the Admin user");
+        UserResponseDto response = adminUserService.registerUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @Operation(summary = "Admin login", description = "Authenticates an admin with email and password")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login successful",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto request) {
+        log.info("Logging in with mail and password");
+        UserResponseDto response = adminUserService.login(request);
+        return ResponseEntity.ok(response);
+    }
+}

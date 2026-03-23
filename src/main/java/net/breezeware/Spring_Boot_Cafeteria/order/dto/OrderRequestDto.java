@@ -9,7 +9,6 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderRequestDto {
 
-    private Long order_id;
     private Long user_id;
     private List<OrderItemRequestDto> items;
 
