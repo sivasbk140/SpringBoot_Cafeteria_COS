@@ -142,7 +142,7 @@ public class CustomerOrderService {
     // Place a new order
     // ═══════════════════════════════════════════════════════
 
-    public OrderDetailDto placeOrder(OrderRequestDto request) {
+public OrderDetailDto placeOrder(OrderRequestDto request) {
         log.info("Customer placing order for userId: {}", request.getUser_id());
 
         User user = userRepository.findById(request.getUser_id())
