@@ -66,11 +66,11 @@ public class AdminFoodService {
         FoodItem foodItem = foodItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
 
-        foodItem.setName(request.getName());
-        foodItem.setPrice(request.getPrice());
-        foodItem.setQuantity(request.getQuantity());
-        foodItem.setCategory(request.getCategory());
-        foodItem.setDescription(request.getDescription());
+        if (request.getName() != null) foodItem.setName(request.getName());
+        if (request.getPrice() != null) foodItem.setPrice(request.getPrice());
+        if (request.getQuantity() != null) foodItem.setQuantity(request.getQuantity());
+        if (request.getCategory() != null) foodItem.setCategory(request.getCategory());
+        if (request.getDescription() != null) foodItem.setDescription(request.getDescription());
 
         FoodItem updated = foodItemRepository.save(foodItem);
         return mapFoodItemToResponse(updated);
@@ -89,25 +89,14 @@ public class AdminFoodService {
     // ═══════════════════════════════════════════════════════
     // STORY 5: Create Food Menu
     // ═══════════════════════════════════════════════════════
-    public FoodMenuResponse createFoodMenu(FoodMenuRequest request) {
-        FoodMenu menu = new FoodMenu(request.getCategory());
+    public AdminFoodMenuResponse createFoodMenu(FoodMenuRequest request) {
+        FoodMenu menu = new FoodMenu(request.getCategory(), request.getMenuDay());
 
-        // Add food items to menu
         if (request.getFoodItemIds() != null && !request.getFoodItemIds().isEmpty()) {
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
                         .orElseThrow(() -> new RuntimeException("Food item not found: " + foodItemId));
-
-                FoodMenuItemMap mapping = new FoodMenuItemMap(menu, foodItem);
-                menu.addMenuItem(mapping);
-            }
-        }
-
-        // Set availability days
-        if (request.getAvailableDays() != null && !request.getAvailableDays().isEmpty()) {
-            for (MenuDay day : request.getAvailableDays()) {
-                AvailabilityMap availability = new AvailabilityMap(menu, day);
-                menu.addAvailability(availability);
+                menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
             }
         }
 
@@ -118,52 +107,41 @@ public class AdminFoodService {
     // ═══════════════════════════════════════════════════════
     // STORY 6: View Food Menu
     // ═══════════════════════════════════════════════════════
-    public FoodMenuResponse getFoodMenuById(Long id) {
+    public AdminFoodMenuResponse getFoodMenuById(Long id) {
         FoodMenu menu = foodMenuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
         return mapMenuToResponse(menu);
     }
 
-    public List<FoodMenuResponse> getAllFoodMenus() {
+    public List<AdminFoodMenuResponse> getAllFoodMenus() {
         return foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
     }
 
-    public FoodMenuResponse getMenuByCategory(String category) {
-        FoodMenu menu = foodMenuRepository.findByCategory(category)
-                .orElseThrow(() -> new RuntimeException("Menu not found for category: " + category));
-        return mapMenuToResponse(menu);
+    public List<AdminFoodMenuResponse> getMenusForDay(MenuDay day) {
+        return foodMenuRepository.findByMenuDay(day).stream()
+                .map(this::mapMenuToResponse)
+                .collect(Collectors.toList());
     }
+
 
     // ═══════════════════════════════════════════════════════
     // STORY 7: Update Food Menu
     // ═══════════════════════════════════════════════════════
-    public FoodMenuResponse updateFoodMenu(Long id, FoodMenuRequest request) {
+    public AdminFoodMenuResponse updateFoodMenu(Long id, FoodMenuRequest request) {
         FoodMenu menu = foodMenuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
 
-        // Update category
-        menu.setCategory(request.getCategory());
+        if (request.getCategory() != null) menu.setCategory(request.getCategory());
+        if (request.getMenuDay() != null) menu.setMenuDay(request.getMenuDay());
 
-        // Clear existing items and add new ones
-        menu.getMenuItems().clear();
         if (request.getFoodItemIds() != null && !request.getFoodItemIds().isEmpty()) {
+            menu.getMenuItems().clear();
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
                         .orElseThrow(() -> new RuntimeException("Food item not found: " + foodItemId));
-
-                FoodMenuItemMap mapping = new FoodMenuItemMap(menu, foodItem);
-                menu.addMenuItem(mapping);
-            }
-        }
-
-        // Update availability
-        menu.getAvailabilities().clear();
-        if (request.getAvailableDays() != null && !request.getAvailableDays().isEmpty()) {
-            for (MenuDay day : request.getAvailableDays()) {
-                AvailabilityMap availability = new AvailabilityMap(menu, day);
-                menu.addAvailability(availability);
+                menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
             }
         }
 
@@ -185,7 +163,7 @@ public class AdminFoodService {
     // Additional Admin Operations
     // ═══════════════════════════════════════════════════════
 
-    public FoodMenuResponse addFoodItemToMenu(Long menuId, Long foodItemId) {
+    public AdminFoodMenuResponse addFoodItemToMenu(Long menuId, Long foodItemId) {
         FoodMenu menu = foodMenuRepository.findById(menuId)
                 .orElseThrow(() -> new RuntimeException("Menu not found"));
 
@@ -199,7 +177,7 @@ public class AdminFoodService {
         return mapMenuToResponse(updated);
     }
 
-    public FoodMenuResponse removeFoodItemFromMenu(Long menuId, Long foodItemId) {
+    public AdminFoodMenuResponse removeFoodItemFromMenu(Long menuId, Long foodItemId) {
         FoodMenu menu = foodMenuRepository.findById(menuId)
                 .orElseThrow(() -> new RuntimeException("Menu not found"));
 
@@ -209,19 +187,6 @@ public class AdminFoodService {
         return mapMenuToResponse(updated);
     }
 
-    public FoodMenuResponse setMenuAvailability(Long menuId, List<MenuDay> days) {
-        FoodMenu menu = foodMenuRepository.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu not found"));
-
-        menu.getAvailabilities().clear();
-        for (MenuDay day : days) {
-            AvailabilityMap availability = new AvailabilityMap(menu, day);
-            menu.addAvailability(availability);
-        }
-
-        FoodMenu updated = foodMenuRepository.save(menu);
-        return mapMenuToResponse(updated);
-    }
 
     public List<FoodItemResponse> getLowStockItems(int threshold) {
         return foodItemRepository.findLowStock(threshold).stream()
@@ -253,7 +218,7 @@ public class AdminFoodService {
         );
     }
 
-    private FoodMenuResponse mapMenuToResponse(FoodMenu menu) {
+    private AdminFoodMenuResponse mapMenuToResponse(FoodMenu menu) {
         List<FoodMenuItemMapResponse> itemResponses = menu.getMenuItems().stream()
                 .map(mapping -> new FoodMenuItemMapResponse(
                         mapping.getId(),
@@ -264,15 +229,11 @@ public class AdminFoodService {
                 ))
                 .collect(Collectors.toList());
 
-        List<MenuDay> availableDays = menu.getAvailabilities().stream()
-                .map(AvailabilityMap::getMenuDay)
-                .collect(Collectors.toList());
-
-        return new FoodMenuResponse(
+        return new AdminFoodMenuResponse(
                 menu.getId(),
                 menu.getCategory(),
+                menu.getMenuDay(),
                 itemResponses,
-                availableDays,
                 menu.getCreatedOn()
         );
     }

@@ -1,8 +1,10 @@
 package net.breezeware.Spring_Boot_Cafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
-import net.breezeware.Spring_Boot_Cafeteria.food.dto.*;
-import net.breezeware.Spring_Boot_Cafeteria.food.entity.*;
+import net.breezeware.Spring_Boot_Cafeteria.food.dto.CustomerFoodItemResponse;
+import net.breezeware.Spring_Boot_Cafeteria.food.dto.CustomerFoodMenuResponse;
+import net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodItem;
+import net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodMenu;
 import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 import net.breezeware.Spring_Boot_Cafeteria.food.repo.FoodItemRepository;
 import net.breezeware.Spring_Boot_Cafeteria.food.repo.FoodMenuRepository;
@@ -11,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
@@ -24,98 +25,70 @@ public class CustomerFoodService {
     // ═══════════════════════════════════════════════════════
     // STORY 9: View Food Menu for Specific Day
     // ═══════════════════════════════════════════════════════
-    public List<FoodMenuResponse> getMenusForDay(MenuDay day) {
-        List<FoodMenu> allMenus = foodMenuRepository.findAll();
-
-        return allMenus.stream()
-                .filter(menu -> menu.getAvailabilities().stream()
-                        .anyMatch(avail -> avail.getMenuDay() == day))
+    public List<CustomerFoodMenuResponse> getMenusForDay(MenuDay day) {
+        return foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Additional Customer Operations
-    // ═══════════════════════════════════════════════════════
-
-    public FoodMenuResponse getMenuByCategory(String category) {
-        FoodMenu menu = foodMenuRepository.findByCategory(category)
-                .orElseThrow(() -> new RuntimeException("Menu not found for category: " + category));
-        return mapMenuToResponse(menu);
-    }
-
-    public List<FoodMenuResponse> getAllAvailableMenus() {
+    public List<CustomerFoodMenuResponse> getAllAvailableMenus() {
         return foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<FoodItemResponse> getAvailableFoodItems() {
+    public List<CustomerFoodItemResponse> getAvailableFoodItems() {
         return foodItemRepository.findAvailableItems().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<FoodItemResponse> getFoodItemsByCategory(String category) {
+    public List<CustomerFoodItemResponse> getFoodItemsByCategory(String category) {
         return foodItemRepository.findByCategory(category).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
     }
 
-    public List<FoodItemResponse> searchFoodItems(String keyword) {
+    public List<CustomerFoodItemResponse> searchFoodItems(String keyword) {
         return foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
     }
 
-    public FoodItemResponse getFoodItemById(Long id) {
-        FoodItem foodItem = foodItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
-        return mapFoodItemToResponse(foodItem);
-    }
-
     // ═══════════════════════════════════════════════════════
     // Helper Methods
     // ═══════════════════════════════════════════════════════
 
-    private FoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
-        return new FoodItemResponse(
-                foodItem.getId(),
+    private CustomerFoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
+        return new CustomerFoodItemResponse(
                 foodItem.getName(),
                 foodItem.getPrice(),
                 foodItem.getQuantity(),
                 foodItem.getCategory(),
                 foodItem.getDescription(),
-                foodItem.isAvailable(),
-                foodItem.getCreatedOn(),
-                foodItem.getUpdatedOn()
+                foodItem.isAvailable()
         );
     }
 
-    private FoodMenuResponse mapMenuToResponse(FoodMenu menu) {
-        // Only return available items to customers
-        List<FoodMenuItemMapResponse> itemResponses = menu.getMenuItems().stream()
-                .filter(mapping -> mapping.getIsAvailable() && mapping.getFoodItem().getQuantity() > 0)
-                .map(mapping -> new FoodMenuItemMapResponse(
-                        mapping.getId(),
-                        mapping.getFoodItem().getId(),
+    private CustomerFoodMenuResponse mapMenuToResponse(FoodMenu menu) {
+        List<CustomerFoodItemResponse> itemResponses = menu.getMenuItems().stream()
+                .filter(mapping -> mapping.getFoodItem().getQuantity() > 0)
+                .map(mapping -> new CustomerFoodItemResponse(
                         mapping.getFoodItem().getName(),
                         mapping.getFoodItem().getPrice(),
+                        mapping.getFoodItem().getQuantity(),
+                        mapping.getFoodItem().getCategory(),
+                        mapping.getFoodItem().getDescription(),
                         mapping.getIsAvailable()
                 ))
                 .collect(Collectors.toList());
 
-        List<MenuDay> availableDays = menu.getAvailabilities().stream()
-                .map(AvailabilityMap::getMenuDay)
-                .collect(Collectors.toList());
-
-        return new FoodMenuResponse(
-                menu.getId(),
+        return new CustomerFoodMenuResponse(
                 menu.getCategory(),
+                menu.getMenuDay(),
                 itemResponses,
-                availableDays,
                 menu.getCreatedOn()
         );
     }

@@ -67,13 +67,25 @@ public class StaffOrderService {
         log.info("Staff updating order {} status to {}", orderId, newStatus);
 
         if (newStatus == OrderStatus.ORDER_CANCELLED) {
-            throw new RuntimeException("Staff cannot cancel orders. Only customer or admin can cancel.");
+            throw new RuntimeException("Use the cancel endpoint to cancel an order.");
         }
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
 
         order.setStatus(newStatus);
+        Order updated = orderRepository.save(order);
+        return mapToDetail(updated);
+    }
+
+    public OrderDetailDto cancelOrder(Long orderId) {
+        log.info("Staff force cancelling order: {}", orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        if (!order.getStatus().isForceCancellable()) {
+            throw new RuntimeException("Order is already delivered or cancelled, cannot cancel.");
+        }
+        order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
         return mapToDetail(updated);
     }

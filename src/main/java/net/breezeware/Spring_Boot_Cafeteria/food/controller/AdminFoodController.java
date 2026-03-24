@@ -251,16 +251,16 @@ public class AdminFoodController {
                     description = "Food menu created",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/menus")
-    public ResponseEntity<FoodMenuResponse> createFoodMenu(
+    public ResponseEntity<AdminFoodMenuResponse> createFoodMenu(
             @Valid @RequestBody FoodMenuRequest request) {
-        FoodMenuResponse response = adminFoodService.createFoodMenu(request);
+        AdminFoodMenuResponse response = adminFoodService.createFoodMenu(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -275,14 +275,14 @@ public class AdminFoodController {
                     description = "Food menus retrieved",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodMenuResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = AdminFoodMenuResponse.class))
                     )
             ),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/menus")
-    public ResponseEntity<List<FoodMenuResponse>> getAllFoodMenus() {
-        List<FoodMenuResponse> menus = adminFoodService.getAllFoodMenus();
+    public ResponseEntity<List<AdminFoodMenuResponse>> getAllFoodMenus() {
+        List<AdminFoodMenuResponse> menus = adminFoodService.getAllFoodMenus();
         return ResponseEntity.ok(menus);
     }
 
@@ -297,39 +297,38 @@ public class AdminFoodController {
                     description = "Food menu retrieved",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/menus/{id}")
-    public ResponseEntity<FoodMenuResponse> getFoodMenuById(@PathVariable Long id) {
-        FoodMenuResponse menu = adminFoodService.getFoodMenuById(id);
+    public ResponseEntity<AdminFoodMenuResponse> getFoodMenuById(@PathVariable Long id) {
+        AdminFoodMenuResponse menu = adminFoodService.getFoodMenuById(id);
         return ResponseEntity.ok(menu);
     }
 
     /**
-     * Get menu by category
-     * GET /api/admin/food/menus/category/{category}
+     * Get menus for a specific day
+     * GET /api/admin/food/menus/day/{day}
      */
-    @Operation(summary = "Get food menu by category", description = "Fetches a food menu for the given category")
+    @Operation(summary = "Get food menus by day", description = "Fetches all menus (BREAKFAST, LUNCH, DINNER) for the given day")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Food menu retrieved",
+                    description = "Food menus retrieved",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            array = @ArraySchema(schema = @Schema(implementation = AdminFoodMenuResponse.class))
                     )
             ),
-            @ApiResponse(responseCode = "404", description = "Menu not found for category", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
-    @GetMapping("/menus/category/{category}")
-    public ResponseEntity<FoodMenuResponse> getMenuByCategory(@PathVariable String category) {
-        FoodMenuResponse menu = adminFoodService.getMenuByCategory(category);
-        return ResponseEntity.ok(menu);
+    @GetMapping("/menus/day/{day}")
+    public ResponseEntity<List<AdminFoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
+        List<AdminFoodMenuResponse> menus = adminFoodService.getMenusForDay(day);
+        return ResponseEntity.ok(menus);
     }
 
     /**
@@ -343,17 +342,17 @@ public class AdminFoodController {
                     description = "Food menu updated",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PutMapping("/menus/{id}")
-    public ResponseEntity<FoodMenuResponse> updateFoodMenu(
+    public ResponseEntity<AdminFoodMenuResponse> updateFoodMenu(
             @PathVariable Long id,
             @Valid @RequestBody FoodMenuRequest request) {
-        FoodMenuResponse updated = adminFoodService.updateFoodMenu(id, request);
+        AdminFoodMenuResponse updated = adminFoodService.updateFoodMenu(id, request);
         return ResponseEntity.ok(updated);
     }
 
@@ -384,17 +383,17 @@ public class AdminFoodController {
                     description = "Food item added to menu",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Menu or food item not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/menus/{menuId}/items/{foodItemId}")
-    public ResponseEntity<FoodMenuResponse> addFoodItemToMenu(
+    public ResponseEntity<AdminFoodMenuResponse> addFoodItemToMenu(
             @PathVariable Long menuId,
             @PathVariable Long foodItemId) {
-        FoodMenuResponse updated = adminFoodService.addFoodItemToMenu(menuId, foodItemId);
+        AdminFoodMenuResponse updated = adminFoodService.addFoodItemToMenu(menuId, foodItemId);
         return ResponseEntity.ok(updated);
     }
 
@@ -409,17 +408,17 @@ public class AdminFoodController {
                     description = "Food item removed from menu",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
+                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @DeleteMapping("/menus/{menuId}/items/{foodItemId}")
-    public ResponseEntity<FoodMenuResponse> removeFoodItemFromMenu(
+    public ResponseEntity<AdminFoodMenuResponse> removeFoodItemFromMenu(
             @PathVariable Long menuId,
             @PathVariable Long foodItemId) {
-        FoodMenuResponse updated = adminFoodService.removeFoodItemFromMenu(menuId, foodItemId);
+        AdminFoodMenuResponse updated = adminFoodService.removeFoodItemFromMenu(menuId, foodItemId);
         return ResponseEntity.ok(updated);
     }
 
@@ -428,24 +427,5 @@ public class AdminFoodController {
      * PUT /api/admin/food/menus/{menuId}/availability
      * Body: ["MONDAY", "WEDNESDAY", "FRIDAY"]
      */
-    @Operation(summary = "Set menu availability", description = "Sets the days on which a menu is available")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Menu availability updated",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
-    })
-    @PutMapping("/menus/{menuId}/availability")
-    public ResponseEntity<FoodMenuResponse> setMenuAvailability(
-            @PathVariable Long menuId,
-            @RequestBody List<MenuDay> days) {
-        FoodMenuResponse updated = adminFoodService.setMenuAvailability(menuId, days);
-        return ResponseEntity.ok(updated);
-    }
+
 }

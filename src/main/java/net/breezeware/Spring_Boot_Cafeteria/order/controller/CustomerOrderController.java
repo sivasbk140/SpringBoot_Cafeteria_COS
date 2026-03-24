@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.CartItemDto;
+import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderDeliveryRequest;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderDetailDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderRequestDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderSummaryDetailDto;
+import net.breezeware.Spring_Boot_Cafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.Spring_Boot_Cafeteria.order.service.CustomerOrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,10 +50,10 @@ public class CustomerOrderController {
     @PostMapping("/cart/add")
     public ResponseEntity<List<CartItemDto>> addToCart(
             @RequestParam Long userId,
-            @RequestParam Long foodItemId,
+            @RequestParam String foodItemName,
             @RequestParam int quantity) {
-        log.info("POST /api/customer/orders/cart/add - userId: {}, foodItemId: {}, qty: {}", userId, foodItemId, quantity);
-        return ResponseEntity.ok(customerOrderService.addToCart(userId, foodItemId, quantity));
+        log.info("POST /api/customer/orders/cart/add - userId: {}, foodItemName: {}, qty: {}", userId, foodItemName, quantity);
+        return ResponseEntity.ok(customerOrderService.addToCart(userId, foodItemName, quantity));
     }
 
     @Operation(summary = "View cart", description = "Returns all items currently in the customer's cart")
@@ -74,12 +76,12 @@ public class CustomerOrderController {
                             array = @ArraySchema(schema = @Schema(implementation = CartItemDto.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
-    @DeleteMapping("/cart/{userId}/remove/{foodItemId}")
+    @DeleteMapping("/cart/{userId}/remove")
     public ResponseEntity<List<CartItemDto>> removeFromCart(
             @PathVariable Long userId,
-            @PathVariable Long foodItemId) {
-        log.info("DELETE /api/customer/orders/cart/{}/remove/{} - removing item", userId, foodItemId);
-        return ResponseEntity.ok(customerOrderService.removeFromCart(userId, foodItemId));
+            @RequestParam String foodItemName) {
+        log.info("DELETE /api/customer/orders/cart/{}/remove - removing item: {}", userId, foodItemName);
+        return ResponseEntity.ok(customerOrderService.removeFromCart(userId, foodItemName));
     }
 
     @Operation(summary = "Checkout cart", description = "Converts all cart items into a placed order. Clears the cart on success.")
@@ -92,9 +94,11 @@ public class CustomerOrderController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/cart/{userId}/checkout")
-    public ResponseEntity<OrderDetailDto> checkout(@PathVariable Long userId) {
+    public ResponseEntity<OrderDetailDto> checkout(
+            @PathVariable Long userId,
+            @RequestBody OrderDeliveryRequest deliveryRequest) {
         log.info("POST /api/customer/orders/cart/{}/checkout - placing order from cart", userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerOrderService.checkout(userId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerOrderService.checkout(userId, deliveryRequest));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -163,4 +167,25 @@ public class CustomerOrderController {
         log.info("PATCH /api/customer/orders/{}/cancel - userId: {}", orderId, userId);
         return ResponseEntity.ok(customerOrderService.cancelOrder(orderId, userId));
     }
+    @Operation(summary = "Add delivery details", description = "Adds delivery details (name, phone, address) to a placed order")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Delivery details added",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = OrderDeliveryMap.class))),
+            @ApiResponse(responseCode = "400", description = "Delivery details already exist for this order", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PostMapping("/{orderId}/delivery")
+    public ResponseEntity<OrderDeliveryMap> addDeliveryDetails(
+            @PathVariable Long orderId,
+            @RequestParam Long userId,
+            @RequestBody OrderDeliveryRequest request) {
+        log.info("POST /api/customer/orders/{}/delivery - userId: {}", orderId, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(customerOrderService.addDeliveryDetails(orderId, userId, request));
+    }
+
+
 }

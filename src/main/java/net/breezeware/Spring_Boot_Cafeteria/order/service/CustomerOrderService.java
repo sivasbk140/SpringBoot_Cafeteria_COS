@@ -5,12 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import net.breezeware.Spring_Boot_Cafeteria.food.entity.FoodItem;
 import net.breezeware.Spring_Boot_Cafeteria.food.repo.FoodItemRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.CartItemDto;
+import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderDeliveryRequest;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderDetailDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderRequestDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.entity.Order;
+import net.breezeware.Spring_Boot_Cafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.Spring_Boot_Cafeteria.order.entity.OrderItem;
 import net.breezeware.Spring_Boot_Cafeteria.order.enumeration.OrderStatus;
+import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderItemRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderRepository;
 import net.breezeware.Spring_Boot_Cafeteria.user.entity.DeliveryDetail;
@@ -36,6 +39,7 @@ public class CustomerOrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final FoodItemRepository foodItemRepository;
+    private final OrderDeliveryMapRepository orderDeliveryMapRepository;
 
     // In-memory cart: userId → list of cart items
     private final Map<Long, List<CartItemDto>> cartStore = new ConcurrentHashMap<>();
@@ -44,11 +48,11 @@ public class CustomerOrderService {
     // CART: Add food item to cart
     // ═══════════════════════════════════════════════════════
 
-    public List<CartItemDto> addToCart(Long userId, Long foodItemId, int quantity) {
-        log.info("Adding foodItemId: {} to cart for userId: {}", foodItemId, userId);
+    public List<CartItemDto> addToCart(Long userId, String foodItemName, int quantity) {
+        log.info("Adding foodItem: {} to cart for userId: {}", foodItemName, userId);
 
-        FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                .orElseThrow(() -> new RuntimeException("Food item not found with id: " + foodItemId));
+        FoodItem foodItem = foodItemRepository.findByNameIgnoreCase(foodItemName)
+                .orElseThrow(() -> new RuntimeException("Food item not found with name: " + foodItemName));
 
         if (!foodItem.hasStock(quantity)) {
             throw new RuntimeException("Insufficient stock for item: " + foodItem.getName());
@@ -58,7 +62,7 @@ public class CustomerOrderService {
 
         // If item already in cart, increase quantity
         for (CartItemDto existing : cart) {
-            if (existing.getFoodItemId().equals(foodItemId)) {
+            if (existing.getFoodItemName().equalsIgnoreCase(foodItemName)) {
                 existing.setQuantity(existing.getQuantity() + quantity);
                 existing.setTotalPrice(foodItem.getPrice() * existing.getQuantity());
                 return cart;
@@ -90,10 +94,10 @@ public class CustomerOrderService {
     // CART: Remove item from cart
     // ═══════════════════════════════════════════════════════
 
-    public List<CartItemDto> removeFromCart(Long userId, Long foodItemId) {
-        log.info("Removing foodItemId: {} from cart for userId: {}", foodItemId, userId);
+    public List<CartItemDto> removeFromCart(Long userId, String foodItemName) {
+        log.info("Removing foodItem: {} from cart for userId: {}", foodItemName, userId);
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
-        cart.removeIf(item -> item.getFoodItemId().equals(foodItemId));
+        cart.removeIf(item -> item.getFoodItemName().equalsIgnoreCase(foodItemName));
         return cart;
     }
 
@@ -101,7 +105,7 @@ public class CustomerOrderService {
     // CART: Checkout — convert cart to order
     // ═══════════════════════════════════════════════════════
 
-    public OrderDetailDto checkout(Long userId) {
+    public OrderDetailDto checkout(Long userId, OrderDeliveryRequest deliveryRequest) {
         log.info("Checkout for userId: {}", userId);
 
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
@@ -132,6 +136,9 @@ public class CustomerOrderService {
 
         Order saved = orderRepository.save(order);
 
+        OrderDeliveryMap delivery = new OrderDeliveryMap(saved, deliveryRequest.getName(), deliveryRequest.getPhone(), deliveryRequest.getAddress());
+        orderDeliveryMapRepository.save(delivery);
+
         // Clear cart after successful checkout
         cartStore.remove(userId);
 
@@ -142,7 +149,7 @@ public class CustomerOrderService {
     // Place a new order
     // ═══════════════════════════════════════════════════════
 
-public OrderDetailDto placeOrder(OrderRequestDto request) {
+    public OrderDetailDto placeOrder(OrderRequestDto request) {
         log.info("Customer placing order for userId: {}", request.getUser_id());
 
         User user = userRepository.findById(request.getUser_id())
@@ -171,6 +178,10 @@ public OrderDetailDto placeOrder(OrderRequestDto request) {
         }
 
         Order saved = orderRepository.save(order);
+
+        OrderDeliveryMap delivery = new OrderDeliveryMap(saved, request.getDeliveryName(), request.getDeliveryPhone(), request.getDeliveryAddress());
+        orderDeliveryMapRepository.save(delivery);
+
         return mapToDetail(saved);
     }
 
@@ -229,6 +240,28 @@ public OrderDetailDto placeOrder(OrderRequestDto request) {
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
         return mapToDetail(updated);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // Delivery Details
+    // ═══════════════════════════════════════════════════════
+
+    public OrderDeliveryMap addDeliveryDetails(Long orderId, Long userId, OrderDeliveryRequest request) {
+        log.info("Adding delivery details for orderId: {}, userId: {}", orderId, userId);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        if (!order.getUser().getId().equals(userId)) {
+            throw new RuntimeException("Access denied: Order does not belong to this user");
+        }
+
+        if (orderDeliveryMapRepository.findByOrderId(orderId).isPresent()) {
+            throw new RuntimeException("Delivery details already exist for this order");
+        }
+
+        OrderDeliveryMap delivery = new OrderDeliveryMap(order, request.getName(), request.getPhone(), request.getAddress());
+        return orderDeliveryMapRepository.save(delivery);
     }
 
     // ═══════════════════════════════════════════════════════

@@ -10,6 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 public class FoodMenuRequest {
     private String category;
+    private MenuDay menuDay;
     private List<Long> foodItemIds;
-    private List<MenuDay> availableDays;
 }

@@ -6,10 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
 
     List<FoodItem> findByName(String name);
+
+    Optional<FoodItem> findByNameIgnoreCase(String name);
 
     List<FoodItem> findByCategory(String category);
 

@@ -75,12 +75,12 @@ public class StaffOrderController {
         return ResponseEntity.ok(staffOrderService.getOrderById(id));
     }
 
-    @Operation(summary = "Update order status", description = "Updates order delivery status. Valid transitions: PLACED_ORDER → WAITING_FOR_DELIVERY → PENDING_DELIVERY → ORDER_DELIVERED. Staff cannot cancel orders.")
+    @Operation(summary = "Update order status", description = "Updates order status. Valid values: ORDER_CONFIRMED, ORDER_PREPARING, ASSIGNED_DELIVERY_STAFF, ORDER_DELIVERED")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Order status updated",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = OrderDetailDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid status or staff attempted to cancel", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid status", content = @Content),
             @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
@@ -94,5 +94,20 @@ public class StaffOrderController {
             throw new RuntimeException("Invalid order status: " + status);
         }
         return ResponseEntity.ok(staffOrderService.updateOrderStatus(id, orderStatus));
+    }
+
+    @Operation(summary = "Cancel order", description = "Emergency cancel — staff can cancel from any active status")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Order cancelled",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = OrderDetailDto.class))),
+            @ApiResponse(responseCode = "400", description = "Order already delivered or cancelled", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<OrderDetailDto> cancelOrder(@PathVariable Long id) {
+        log.info("PATCH /api/staff/orders/{}/cancel - emergency cancel", id);
+        return ResponseEntity.ok(staffOrderService.cancelOrder(id));
     }
 }

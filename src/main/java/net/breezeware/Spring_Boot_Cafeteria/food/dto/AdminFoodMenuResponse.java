@@ -9,10 +9,10 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class FoodMenuResponse {
+public class AdminFoodMenuResponse {
     private Long id;
     private String category;
+    private MenuDay menuDay;
     private List<FoodMenuItemMapResponse> items;
-    private List<MenuDay> availableDays;
     private LocalDateTime createdOn;
 }

@@ -1,6 +1,7 @@
 package net.breezeware.Spring_Boot_Cafeteria.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +14,8 @@ import net.breezeware.Spring_Boot_Cafeteria.user.service.AdminUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -51,5 +54,32 @@ public class AdminUserController {
         log.info("Logging in with mail and password");
         UserResponseDto response = adminUserService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get  users by id", description = "Returns a particular user by id")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User retrieved",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+        log.info("view user by user_id");
+        UserResponseDto response = adminUserService.getUserById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get all users", description = "Returns a list of all registered users")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Users retrieved",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        List<UserResponseDto> users = adminUserService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 }

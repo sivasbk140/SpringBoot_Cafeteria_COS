@@ -9,6 +9,9 @@ import net.breezeware.Spring_Boot_Cafeteria.user.repo.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -45,6 +48,21 @@ public class AdminUserService {
         User savedUser = userRepository.save(user);
         return mapToResponse(savedUser);
     }
+
+    public UserResponseDto getUserById(Long id) {
+        log.info("view user by id in service layer");
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return mapToResponse(user);
+    }
+
+    public List<UserResponseDto> getAllUsers() {
+        log.info("get all users in service layer");
+        return userRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
 
     private UserResponseDto mapToResponse(User user) {
         return new UserResponseDto(

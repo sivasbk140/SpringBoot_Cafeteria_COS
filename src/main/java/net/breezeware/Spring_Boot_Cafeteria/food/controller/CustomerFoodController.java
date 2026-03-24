@@ -7,7 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import net.breezeware.Spring_Boot_Cafeteria.food.dto.*;
+import net.breezeware.Spring_Boot_Cafeteria.food.dto.CustomerFoodItemResponse;
+import net.breezeware.Spring_Boot_Cafeteria.food.dto.CustomerFoodMenuResponse;
 import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 import net.breezeware.Spring_Boot_Cafeteria.food.service.CustomerFoodService;
 import org.springframework.http.ResponseEntity;
@@ -36,31 +37,13 @@ public class CustomerFoodController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Menus retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodMenuResponse.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = CustomerFoodMenuResponse.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/menus/day/{day}")
-    public ResponseEntity<List<FoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
-        List<FoodMenuResponse> menus = customerFoodService.getMenusForDay(day);
+    public ResponseEntity<List<CustomerFoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
+        List<CustomerFoodMenuResponse> menus = customerFoodService.getMenusForDay(day);
         return ResponseEntity.ok(menus);
-    }
-
-    /**
-     * View menu by category
-     * GET /api/customer/food/menus/category/{category}
-     */
-    @Operation(summary = "Get menu by category", description = "Returns the menu for the given category")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Menu retrieved",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = FoodMenuResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Menu not found for category", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
-    })
-    @GetMapping("/menus/category/{category}")
-    public ResponseEntity<FoodMenuResponse> getMenuByCategory(@PathVariable String category) {
-        FoodMenuResponse menu = customerFoodService.getMenuByCategory(category);
-        return ResponseEntity.ok(menu);
     }
 
     /**
@@ -71,12 +54,12 @@ public class CustomerFoodController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Menus retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodMenuResponse.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = CustomerFoodMenuResponse.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/menus")
-    public ResponseEntity<List<FoodMenuResponse>> getAllAvailableMenus() {
-        List<FoodMenuResponse> menus = customerFoodService.getAllAvailableMenus();
+    public ResponseEntity<List<CustomerFoodMenuResponse>> getAllAvailableMenus() {
+        List<CustomerFoodMenuResponse> menus = customerFoodService.getAllAvailableMenus();
         return ResponseEntity.ok(menus);
     }
 
@@ -88,12 +71,12 @@ public class CustomerFoodController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Available food items retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = CustomerFoodItemResponse.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/items/available")
-    public ResponseEntity<List<FoodItemResponse>> getAvailableFoodItems() {
-        List<FoodItemResponse> items = customerFoodService.getAvailableFoodItems();
+    public ResponseEntity<List<CustomerFoodItemResponse>> getAvailableFoodItems() {
+        List<CustomerFoodItemResponse> items = customerFoodService.getAvailableFoodItems();
         return ResponseEntity.ok(items);
     }
 
@@ -105,12 +88,12 @@ public class CustomerFoodController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Food items retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = CustomerFoodItemResponse.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/items/category/{category}")
-    public ResponseEntity<List<FoodItemResponse>> getFoodItemsByCategory(@PathVariable String category) {
-        List<FoodItemResponse> items = customerFoodService.getFoodItemsByCategory(category);
+    public ResponseEntity<List<CustomerFoodItemResponse>> getFoodItemsByCategory(@PathVariable String category) {
+        List<CustomerFoodItemResponse> items = customerFoodService.getFoodItemsByCategory(category);
         return ResponseEntity.ok(items);
     }
 
@@ -122,30 +105,12 @@ public class CustomerFoodController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Search results returned",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)))),
+                            array = @ArraySchema(schema = @Schema(implementation = CustomerFoodItemResponse.class)))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/items/search")
-    public ResponseEntity<List<FoodItemResponse>> searchFoodItems(@RequestParam String keyword) {
-        List<FoodItemResponse> items = customerFoodService.searchFoodItems(keyword);
+    public ResponseEntity<List<CustomerFoodItemResponse>> searchFoodItems(@RequestParam String keyword) {
+        List<CustomerFoodItemResponse> items = customerFoodService.searchFoodItems(keyword);
         return ResponseEntity.ok(items);
-    }
-
-    /**
-     * View food item details
-     * GET /api/customer/food/items/{id}
-     */
-    @Operation(summary = "Get food item by ID", description = "Returns details of a specific food item")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Food item retrieved",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = FoodItemResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Food item not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
-    })
-    @GetMapping("/items/{id}")
-    public ResponseEntity<FoodItemResponse> getFoodItemById(@PathVariable Long id) {
-        FoodItemResponse item = customerFoodService.getFoodItemById(id);
-        return ResponseEntity.ok(item);
     }
 }

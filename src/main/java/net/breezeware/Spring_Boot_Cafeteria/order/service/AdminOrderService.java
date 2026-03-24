@@ -65,11 +65,11 @@ public class AdminOrderService {
     }
 
     public OrderDetailDto cancelOrder(Long orderId) {
-        log.info("Admin cancelling order: {}", orderId);
+        log.info("Admin force cancelling order: {}", orderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        if (!order.canBeCancelled()) {
-            throw new RuntimeException("Order cannot be cancelled in status: " + order.getStatus());
+        if (!order.getStatus().isForceCancellable()) {
+            throw new RuntimeException("Order is already delivered or cancelled, cannot cancel.");
         }
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);

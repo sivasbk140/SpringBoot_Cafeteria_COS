@@ -1,24 +1,24 @@
 package net.breezeware.Spring_Boot_Cafeteria.user.service;
 
-import  lombok .*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserRequestDto;
 import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserResponseDto;
 import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
 import net.breezeware.Spring_Boot_Cafeteria.user.repo.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Data
-@AllArgsConstructor
-@RequiredArgsConstructor
 @Slf4j
-
+@Service
+@RequiredArgsConstructor
+@Transactional
 public class DeliveryStaffService {
 
-     private final UserRepository userRepository;
-
+    private final UserRepository userRepository;
 
     public UserResponseDto login(UserRequestDto request) {
-        log.info("Delivery Staff  logging In service layer");
+        log.info("Delivery Staff logging In service layer");
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
 
@@ -55,6 +55,3 @@ public class DeliveryStaffService {
         );
     }
 }
-
-
-

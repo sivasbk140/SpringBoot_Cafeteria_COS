@@ -2,18 +2,22 @@ package net.breezeware.Spring_Boot_Cafeteria.food.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import net.breezeware.Spring_Boot_Cafeteria.food.enumeration.MenuDay;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "food_menu")
+@Table(name = "food_menu", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"category", "menu_day"})
+})
 @Data
 @NoArgsConstructor
 @RequiredArgsConstructor
-@ToString(exclude = {"menuItems", "availabilities"})
+@ToString(exclude = "menuItems")
 public class FoodMenu {
 
     @Id
@@ -25,11 +29,14 @@ public class FoodMenu {
     @Column(nullable = false, length = 50)
     private String category;  // BREAKFAST, LUNCH, DINNER
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FoodMenuItemMap> menuItems = new ArrayList<>();
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Menu day is required")
+    @NonNull
+    @Column(name = "menu_day", nullable = false)
+    private MenuDay menuDay;
 
     @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AvailabilityMap> availabilities = new ArrayList<>();
+    private List<FoodMenuItemMap> menuItems = new ArrayList<>();
 
     @Column(name = "created_on", updatable = false)
     private LocalDateTime createdOn;
@@ -48,7 +55,6 @@ public class FoodMenu {
         updatedOn = LocalDateTime.now();
     }
 
-    // Helper methods
     public void addMenuItem(FoodMenuItemMap menuItem) {
         menuItems.add(menuItem);
         menuItem.setMenu(this);
@@ -57,15 +63,5 @@ public class FoodMenu {
     public void removeMenuItem(FoodMenuItemMap menuItem) {
         menuItems.remove(menuItem);
         menuItem.setMenu(null);
-    }
-
-    public void addAvailability(AvailabilityMap availability) {
-        availabilities.add(availability);
-        availability.setMenu(this);
-    }
-
-    public void removeAvailability(AvailabilityMap availability) {
-        availabilities.remove(availability);
-        availability.setMenu(null);
     }
 }
