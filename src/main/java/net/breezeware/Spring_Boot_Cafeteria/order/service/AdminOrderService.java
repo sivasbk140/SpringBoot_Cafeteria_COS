@@ -61,6 +61,9 @@ public class AdminOrderService {
         log.info("Admin updating order {} status to {}", orderId, newStatus);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+        if (!order.getStatus().canTransitionTo(newStatus)) {
+            throw new RuntimeException("Invalid status transition: " + order.getStatus() + " -> " + newStatus);
+        }
         order.setStatus(newStatus);
         Order updated = orderRepository.save(order);
         return mapToDetail(updated);
