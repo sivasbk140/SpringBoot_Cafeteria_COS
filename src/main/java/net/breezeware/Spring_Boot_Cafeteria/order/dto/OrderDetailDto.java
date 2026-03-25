@@ -16,9 +16,9 @@ public class OrderDetailDto {
     private OrderStatus status;
     private List<OrderItemDetailDTO> items;
     private double totalPrice;
-    private String deliveryEmail;
+    private String deliveryName;
     private String deliveryPhone;
-    private String deliveryLocation;
+    private String deliveryAddress;
     private String createdOn;
 
     @Data

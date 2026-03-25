@@ -16,7 +16,6 @@ import net.breezeware.Spring_Boot_Cafeteria.order.enumeration.OrderStatus;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderItemRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderRepository;
-import net.breezeware.Spring_Boot_Cafeteria.user.entity.DeliveryDetail;
 import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
 import net.breezeware.Spring_Boot_Cafeteria.user.repo.UserRepository;
 import org.springframework.stereotype.Service;
@@ -291,15 +290,14 @@ public class CustomerOrderService {
                 ))
                 .collect(Collectors.toList());
 
-        String deliveryEmail = null;
+        String deliveryName = null;
         String deliveryPhone = null;
-        String deliveryLocation = null;
-        List<DeliveryDetail> deliveryDetails = order.getUser().getDeliveryDetails();
-        if (deliveryDetails != null && !deliveryDetails.isEmpty()) {
-            DeliveryDetail dd = deliveryDetails.get(0);
-            deliveryEmail = dd.getEmail();
-            deliveryPhone = dd.getPhoneNumber();
-            deliveryLocation = dd.getLocation();
+        String deliveryAddress = null;
+        OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(order.getId()).orElse(null);
+        if (deliveryMap != null) {
+            deliveryName = deliveryMap.getName();
+            deliveryPhone = deliveryMap.getPhone();
+            deliveryAddress = deliveryMap.getAddress();
         }
 
         return new OrderDetailDto(
@@ -309,9 +307,9 @@ public class CustomerOrderService {
                 order.getStatus(),
                 itemDetails,
                 order.getTotalPrice(),
-                deliveryEmail,
+                deliveryName,
                 deliveryPhone,
-                deliveryLocation,
+                deliveryAddress,
                 order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
         );
     }

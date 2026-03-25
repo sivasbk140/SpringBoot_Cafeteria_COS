@@ -20,79 +20,39 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AdminOrderService {
+public class DeliveryStaffOrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDeliveryMapRepository orderDeliveryMapRepository;
 
     @Transactional(readOnly = true)
-    public List<OrderSummaryDetailDto> getAllOrders() {
-        log.info("Admin fetching all orders");
-        return orderRepository.findAll().stream()
+    public List<OrderSummaryDetailDto> getAssignedOrders(Long staffId) {
+        log.info("Delivery staff {} fetching assigned orders", staffId);
+        return orderDeliveryMapRepository.findByDeliveryStaffId(staffId).stream()
+                .map(OrderDeliveryMap::getOrder)
+                .filter(order -> order.getStatus() == OrderStatus.ASSIGNED_DELIVERY_STAFF)
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public OrderDetailDto getOrderById(Long orderId) {
-        log.info("Admin fetching order by id: {}", orderId);
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        return mapToDetail(order);
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrderSummaryDetailDto> getOrdersByStatus(OrderStatus status) {
-        log.info("Admin fetching orders by status: {}", status);
-        return orderRepository.findByStatus(status).stream()
-                .map(this::mapToSummary)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrderSummaryDetailDto> getOrdersByUserId(Long userId) {
-        log.info("Admin fetching orders for user: {}", userId);
-        return orderRepository.findByUserId(userId).stream()
-                .map(this::mapToSummary)
-                .collect(Collectors.toList());
-    }
-
-    public OrderDetailDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
-        log.info("Admin updating order {} status to {}", orderId, newStatus);
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        order.setStatus(newStatus);
-        Order updated = orderRepository.save(order);
-        return mapToDetail(updated);
-    }
-
-    public OrderDetailDto assignDeliveryStaff(Long orderId, Long staffId) {
-        log.info("Admin assigning delivery staff {} to order {}", staffId, orderId);
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-
-        if (order.getStatus() != OrderStatus.ORDER_PREPARING) {
-            throw new RuntimeException("Order must be in ORDER_PREPARING status to assign delivery staff");
-        }
+    public OrderDetailDto markOrderDelivered(Long orderId, Long staffId) {
+        log.info("Delivery staff {} marking order {} as delivered", staffId, orderId);
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new RuntimeException("No delivery details found for order: " + orderId));
-        deliveryMap.setDeliveryStaffId(staffId);
-        orderDeliveryMapRepository.save(deliveryMap);
 
-        order.setStatus(OrderStatus.ASSIGNED_DELIVERY_STAFF);
-        Order updated = orderRepository.save(order);
-        return mapToDetail(updated);
-    }
+        if (!staffId.equals(deliveryMap.getDeliveryStaffId())) {
+            throw new RuntimeException("Order " + orderId + " is not assigned to staff " + staffId);
+        }
 
-    public OrderDetailDto cancelOrder(Long orderId) {
-        log.info("Admin force cancelling order: {}", orderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
-        if (!order.getStatus().isForceCancellable()) {
-            throw new RuntimeException("Order is already delivered or cancelled, cannot cancel.");
+
+        if (order.getStatus() != OrderStatus.ASSIGNED_DELIVERY_STAFF) {
+            throw new RuntimeException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered");
         }
-        order.setStatus(OrderStatus.ORDER_CANCELLED);
+
+        order.setStatus(OrderStatus.ORDER_DELIVERED);
         Order updated = orderRepository.save(order);
         return mapToDetail(updated);
     }

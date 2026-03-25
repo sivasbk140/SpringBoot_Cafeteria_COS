@@ -33,6 +33,9 @@ public class OrderDeliveryMap {
     @NonNull
     private String address;
 
+    @Column(name = "delivery_staff_id")
+    private Long deliveryStaffId;
+
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdOn;

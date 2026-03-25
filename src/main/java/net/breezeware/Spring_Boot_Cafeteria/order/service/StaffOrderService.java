@@ -5,9 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderDetailDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.Spring_Boot_Cafeteria.order.entity.Order;
+import net.breezeware.Spring_Boot_Cafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.Spring_Boot_Cafeteria.order.enumeration.OrderStatus;
+import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.Spring_Boot_Cafeteria.order.repo.OrderRepository;
-import net.breezeware.Spring_Boot_Cafeteria.user.entity.DeliveryDetail;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class StaffOrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderDeliveryMapRepository orderDeliveryMapRepository;
 
     // ═══════════════════════════════════════════════════════
     // View all orders
@@ -90,6 +92,27 @@ public class StaffOrderService {
         return mapToDetail(updated);
     }
 
+    // Assign delivery staff to the order
+
+    public OrderDetailDto assignDeliveryStaff(Long orderId, Long staffId) {
+        log.info("Admin assigning delivery staff {} to order {}", staffId, orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+
+        if (order.getStatus() != OrderStatus.ORDER_PREPARING) {
+            throw new RuntimeException("Order must be in ORDER_PREPARING status to assign delivery staff");
+        }
+
+        OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new RuntimeException("No delivery details found for order: " + orderId));
+        deliveryMap.setDeliveryStaffId(staffId);
+        orderDeliveryMapRepository.save(deliveryMap);
+
+        order.setStatus(OrderStatus.ASSIGNED_DELIVERY_STAFF);
+        Order updated = orderRepository.save(order);
+        return mapToDetail(updated);
+    }
+
     // ═══════════════════════════════════════════════════════
     // Helper Methods
     // ═══════════════════════════════════════════════════════
@@ -117,15 +140,14 @@ public class StaffOrderService {
                 ))
                 .collect(Collectors.toList());
 
-        String deliveryEmail = null;
+        String deliveryName = null;
         String deliveryPhone = null;
-        String deliveryLocation = null;
-        List<DeliveryDetail> deliveryDetails = order.getUser().getDeliveryDetails();
-        if (deliveryDetails != null && !deliveryDetails.isEmpty()) {
-            DeliveryDetail dd = deliveryDetails.get(0);
-            deliveryEmail = dd.getEmail();
-            deliveryPhone = dd.getPhoneNumber();
-            deliveryLocation = dd.getLocation();
+        String deliveryAddress = null;
+        OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(order.getId()).orElse(null);
+        if (deliveryMap != null) {
+            deliveryName = deliveryMap.getName();
+            deliveryPhone = deliveryMap.getPhone();
+            deliveryAddress = deliveryMap.getAddress();
         }
 
         return new OrderDetailDto(
@@ -135,9 +157,9 @@ public class StaffOrderService {
                 order.getStatus(),
                 itemDetails,
                 order.getTotalPrice(),
-                deliveryEmail,
+                deliveryName,
                 deliveryPhone,
-                deliveryLocation,
+                deliveryAddress,
                 order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
         );
     }

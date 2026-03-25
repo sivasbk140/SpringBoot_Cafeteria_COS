@@ -53,6 +53,32 @@ public class AdminOrderController {
         return ResponseEntity.ok(adminOrderService.getOrderById(id));
     }
 
+    @Operation(summary = "Get completed orders", description = "Returns all orders with status ORDER_DELIVERED")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Completed orders retrieved",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = OrderSummaryDetailDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping("/completed")
+    public ResponseEntity<List<OrderSummaryDetailDto>> getCompletedOrders() {
+        log.info("GET /api/admin/orders/completed - fetching completed orders");
+        return ResponseEntity.ok(adminOrderService.getOrdersByStatus(OrderStatus.ORDER_DELIVERED));
+    }
+
+    @Operation(summary = "Get cancelled orders", description = "Returns all orders with status ORDER_CANCELLED")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cancelled orders retrieved",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = OrderSummaryDetailDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping("/cancelled")
+    public ResponseEntity<List<OrderSummaryDetailDto>> getCancelledOrders() {
+        log.info("GET /api/admin/orders/cancelled - fetching cancelled orders");
+        return ResponseEntity.ok(adminOrderService.getOrdersByStatus(OrderStatus.ORDER_CANCELLED));
+    }
+
     @Operation(summary = "Get orders by status", description = "Returns all orders filtered by the given status (e.g. PLACED_ORDER, ORDER_DELIVERED)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orders retrieved",
@@ -101,6 +127,21 @@ public class AdminOrderController {
             throw new RuntimeException("Invalid order status: " + status);
         }
         return ResponseEntity.ok(adminOrderService.updateOrderStatus(id, orderStatus));
+    }
+
+    @Operation(summary = "Assign delivery staff", description = "Assigns a delivery staff to an order and sets status to ASSIGNED_DELIVERY_STAFF. Order must be in ORDER_PREPARING status.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Delivery staff assigned",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = OrderDetailDto.class))),
+            @ApiResponse(responseCode = "400", description = "Order not in ORDER_PREPARING status", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Order not found", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @PatchMapping("/{id}/assign")
+    public ResponseEntity<OrderDetailDto> assignDeliveryStaff(@PathVariable Long id, @RequestParam Long staffId) {
+        log.info("PATCH /api/admin/orders/{}/assign - assigning staff {}", id, staffId);
+        return ResponseEntity.ok(adminOrderService.assignDeliveryStaff(id, staffId));
     }
 
     @Operation(summary = "Cancel order", description = "Cancels an order. Only orders in PLACED_ORDER status can be cancelled.")
