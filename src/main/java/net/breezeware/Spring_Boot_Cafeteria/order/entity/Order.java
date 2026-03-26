@@ -68,20 +68,10 @@ public class Order {
         item.setOrder(this);
     }
 
-    public void removeItem(OrderItem item) {
-        items.remove(item);
-        item.setOrder(null);
-    }
-
-
     public Double getTotalPrice() {
         return items.stream()
                 .mapToDouble(OrderItem::getTotalPrice)
                 .sum();
-    }
-
-    public int getItemCount() {
-        return items.size();
     }
 
     public boolean isEmpty() {
@@ -92,11 +82,4 @@ public class Order {
         return status.isCancellable();
     }
 
-    public boolean isActive() {
-        return status.isActive();
-    }
-
-    public boolean isCompleted() {
-        return status.isCompleted();
-    }
 }

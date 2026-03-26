@@ -58,6 +58,9 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
 
+
+
+
     @PrePersist
     protected void onCreate() {
         createdOn = new Date();

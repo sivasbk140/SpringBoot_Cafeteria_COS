@@ -53,16 +53,5 @@ public class FoodMenuItemMap {
         updatedOn = LocalDateTime.now();
     }
 
-    // Business logic
-    public void toggleAvailability() {
-        this.isAvailable = !this.isAvailable;
-    }
 
-    public void makeAvailable() {
-        this.isAvailable = true;
-    }
-
-    public void makeUnavailable() {
-        this.isAvailable = false;
-    }
 }

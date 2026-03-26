@@ -36,18 +36,4 @@ public enum OrderStatus {
         return this != ORDER_DELIVERED && this != ORDER_CANCELLED;
     }
 
-    public boolean isActive() {
-        return this == PLACED_ORDER ||
-                this == ORDER_CONFIRMED ||
-                this == ORDER_PREPARING ||
-                this == ASSIGNED_DELIVERY_STAFF;
-    }
-
-    public boolean isCompleted() {
-        return this == ORDER_DELIVERED;
-    }
-
-    public boolean isCancelled() {
-        return this == ORDER_CANCELLED;
-    }
 }
