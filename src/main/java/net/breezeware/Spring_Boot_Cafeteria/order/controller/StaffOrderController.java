@@ -137,6 +137,20 @@ public class StaffOrderController {
         return ResponseEntity.ok(staffOrderService.assignDeliveryStaff(id, staffId));
     }
 
+    @Operation(summary = "Get orders by user", description = "Returns all orders placed by a specific user")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Orders retrieved",
+                    content = @Content(mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = OrderSummaryDetailDto.class)))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+    })
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<OrderSummaryDetailDto>> getOrdersByUser(@PathVariable Long userId) {
+        log.info("GET /api/admin/orders/user/{} - fetching orders by user", userId);
+        return ResponseEntity.ok(staffOrderService.getOrdersByUserId(userId));
+    }
+
+
     @Operation(summary = "Cancel order", description = "Emergency cancel — staff can cancel from any active status")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Order cancelled",

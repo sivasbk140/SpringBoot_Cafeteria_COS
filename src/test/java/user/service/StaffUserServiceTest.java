@@ -1,0 +1,123 @@
+package user.service;
+
+import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserRequestDto;
+import net.breezeware.Spring_Boot_Cafeteria.user.dto.UserResponseDto;
+import net.breezeware.Spring_Boot_Cafeteria.user.entity.User;
+import net.breezeware.Spring_Boot_Cafeteria.user.enumeration.Role;
+import net.breezeware.Spring_Boot_Cafeteria.user.repo.UserRepository;
+import net.breezeware.Spring_Boot_Cafeteria.user.service.DeliveryStaffService;
+import net.breezeware.Spring_Boot_Cafeteria.user.service.StaffUserService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+public class StaffUserServiceTest {
+
+
+
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private StaffUserService staffUserService;
+
+    @Test
+    void register_success() {
+
+        // Arrange
+        UserRequestDto requestDto =
+                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        User userEntity =
+                new User("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        when(userRepository.save(any(User.class)))
+                .thenReturn(userEntity);
+
+        // Act
+        UserResponseDto result = staffUserService.registerUser(requestDto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Sikar", result.getName());
+    }
+
+    @Test
+    void register_failed_emailAlreadyExists() {
+
+        // Arrange
+        UserRequestDto requestDto =
+                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        when(userRepository.save(any(User.class)))
+                .thenThrow(new RuntimeException("Email Already Registered"));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            staffUserService.registerUser(requestDto);
+        });
+
+        assertEquals("Email Already Registered", exception.getMessage());
+
+        // Verify
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void login_success() {
+
+        // Arrange
+        UserRequestDto request =
+                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        User user =
+                new User("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        when(userRepository.findByEmail("sikar@gmail.com"))
+                .thenReturn(Optional.of(user));
+
+        // Act
+        UserResponseDto response = staffUserService.login(request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals("Sikar", response.getName());
+        assertEquals("sikar@gmail.com", response.getEmail());
+
+        verify(userRepository).findByEmail("sikar@gmail.com");
+    }
+
+
+
+    @Test
+    void login_failed_user_not_found() {
+
+        // Arrange
+        UserRequestDto request =
+                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+
+        when(userRepository.findByEmail("sikar@gmail.com"))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            staffUserService.login(request);
+        });
+
+        assertEquals("Invalid email or password", exception.getMessage());
+
+        verify(userRepository).findByEmail("sikar@gmail.com");
+    }
+
+}

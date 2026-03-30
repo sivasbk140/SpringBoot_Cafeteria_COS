@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.breezeware.Spring_Boot_Cafeteria.food.dto.*;
@@ -27,6 +28,7 @@ import java.util.List;
 @RequestMapping("/api/admin/food")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Admin Food APIs", description = "APIs for Admin to view menus and food items and make changes over them")
 public class AdminFoodController {
 
     private final AdminFoodService adminFoodService;

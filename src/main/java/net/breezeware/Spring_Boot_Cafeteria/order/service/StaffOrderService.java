@@ -61,6 +61,14 @@ public class StaffOrderService {
         return mapToDetail(order);
     }
 
+    @Transactional(readOnly = true)
+    public List<OrderSummaryDetailDto> getOrdersByUserId(Long userId) {
+        log.info("Staff fetching orders for user: {}", userId);
+        return orderRepository.findByUserId(userId).stream()
+                .map(this::mapToSummary)
+                .collect(Collectors.toList());
+    }
+
     // ═══════════════════════════════════════════════════════
     // Update order status (staff cannot cancel orders)
     // ═══════════════════════════════════════════════════════

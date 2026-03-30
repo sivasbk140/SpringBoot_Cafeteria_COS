@@ -95,7 +95,7 @@ public class User {
 
     // Business logic
     public boolean isAdmin() {
-        return role == Role.ADMIN;
+        return role == Role.CUSTOMER;
     }
 
     public boolean isStaff() {
