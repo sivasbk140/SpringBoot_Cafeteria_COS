@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>net.breezeware</groupId>
-	<artifactId>Spring_Boot_Cafteria</artifactId>
+	<artifactId>SpringBootCafteria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
