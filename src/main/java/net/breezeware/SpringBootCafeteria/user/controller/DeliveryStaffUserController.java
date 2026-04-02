@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.service.DeliveryStaffService;
@@ -49,7 +50,7 @@ public class DeliveryStaffUserController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto request) {
+    public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");
         UserResponseDto response = deliveryStaffService.login(request);
         return ResponseEntity.ok(response);

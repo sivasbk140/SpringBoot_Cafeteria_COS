@@ -3,6 +3,7 @@
 package net.breezeware.SpringBootCafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
+import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
 import net.breezeware.SpringBootCafeteria.food.dto.*;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodItem;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodMenu;
@@ -31,9 +32,10 @@ public class AdminFoodService {
                 request.getName(),
                 request.getPrice(),
                 request.getQuantity(),
-                request.getCategory()
+                request.getCategory(),
+                request.getDescription()
         );
-        foodItem.setDescription(request.getDescription());
+
 
         FoodItem saved = foodItemRepository.save(foodItem);
         return mapFoodItemToResponse(saved);
@@ -42,14 +44,20 @@ public class AdminFoodService {
 
     public FoodItemResponse getFoodItemById(Long id) {
         FoodItem foodItem = foodItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Food item not found with id: " + id));
         return mapFoodItemToResponse(foodItem);
     }
 
     public List<FoodItemResponse> getAllFoodItems() {
-        return foodItemRepository.findAll().stream()
+        List<FoodItemResponse> items= foodItemRepository.findAll().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+
+        if(items.isEmpty())
+        {
+            throw new ResourceNotFoundException("No food items found in the system");
+        }
+        return items;
     }
 
     public List<FoodItemResponse> getFoodItemsByCategory(String category) {
@@ -61,7 +69,7 @@ public class AdminFoodService {
 
     public FoodItemResponse updateFoodItem(Long id, FoodItemRequest request) {
         FoodItem foodItem = foodItemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Food item not found with id: " + id));
 
         if (request.getName() != null) foodItem.setName(request.getName());
         if (request.getPrice() != null) foodItem.setPrice(request.getPrice());
@@ -76,7 +84,7 @@ public class AdminFoodService {
 
     public void deleteFoodItem(Long id) {
         if (!foodItemRepository.existsById(id)) {
-            throw new RuntimeException("Food item not found with id: " + id);
+            throw new ResourceNotFoundException("Food item not found with id: " + id);
         }
         foodItemRepository.deleteById(id);
     }
@@ -88,7 +96,7 @@ public class AdminFoodService {
         if (request.getFoodItemIds() != null && !request.getFoodItemIds().isEmpty()) {
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                        .orElseThrow(() -> new RuntimeException("Food item not found: " + foodItemId));
+                        .orElseThrow(() -> new ResourceNotFoundException("Food item not found: " + foodItemId));
                 menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
             }
         }
@@ -100,27 +108,40 @@ public class AdminFoodService {
 
     public AdminFoodMenuResponse getFoodMenuById(Long id) {
         FoodMenu menu = foodMenuRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found with id: " + id));
         return mapMenuToResponse(menu);
     }
 
     public List<AdminFoodMenuResponse> getAllFoodMenus() {
-        return foodMenuRepository.findAll().stream()
+        List<AdminFoodMenuResponse> menus= foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
+     if(menus.isEmpty())
+     {
+         throw  new ResourceNotFoundException("No menus found in the system");
+     }
+
+    return menus;
     }
 
     public List<AdminFoodMenuResponse> getMenusForDay(MenuDay day) {
-        return foodMenuRepository.findByMenuDay(day).stream()
+        List<AdminFoodMenuResponse> menuForDays = foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
+
+        if(menuForDays.isEmpty())
+        {
+            throw new ResourceNotFoundException("No menu fouund for the day: "+ day);
+        }
+
+    return menuForDays;
     }
 
 
 
     public AdminFoodMenuResponse updateFoodMenu(Long id, FoodMenuRequest request) {
         FoodMenu menu = foodMenuRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found with id: " + id));
 
         if (request.getCategory() != null) menu.setCategory(request.getCategory());
         if (request.getMenuDay() != null) menu.setMenuDay(request.getMenuDay());
@@ -129,7 +150,7 @@ public class AdminFoodService {
             menu.getMenuItems().clear();
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                        .orElseThrow(() -> new RuntimeException("Food item not found: " + foodItemId));
+                        .orElseThrow(() -> new ResourceNotFoundException("Food item not found: " + foodItemId));
                 menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
             }
         }
@@ -141,7 +162,7 @@ public class AdminFoodService {
 
     public void deleteFoodMenu(Long id) {
         if (!foodMenuRepository.existsById(id)) {
-            throw new RuntimeException("Menu not found with id: " + id);
+            throw new ResourceNotFoundException("Menu not found with id: " + id);
         }
         foodMenuRepository.deleteById(id);
     }
@@ -149,10 +170,10 @@ public class AdminFoodService {
 
     public AdminFoodMenuResponse addFoodItemToMenu(Long menuId, Long foodItemId) {
         FoodMenu menu = foodMenuRepository.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found"));
 
         FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                .orElseThrow(() -> new RuntimeException("Food item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Food item not found"));
 
         FoodMenuItemMap mapping = new FoodMenuItemMap(menu, foodItem);
         menu.addMenuItem(mapping);
@@ -163,7 +184,7 @@ public class AdminFoodService {
 
     public AdminFoodMenuResponse removeFoodItemFromMenu(Long menuId, Long foodItemId) {
         FoodMenu menu = foodMenuRepository.findById(menuId)
-                .orElseThrow(() -> new RuntimeException("Menu not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found"));
 
         menu.getMenuItems().removeIf(item -> item.getFoodItem().getId().equals(foodItemId));
 
@@ -173,15 +194,26 @@ public class AdminFoodService {
 
 
     public List<FoodItemResponse> getLowStockItems(int threshold) {
-        return foodItemRepository.findLowStock(threshold).stream()
+        List<FoodItemResponse> lowStock = foodItemRepository.findLowStock(threshold).stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+
+        if(lowStock.isEmpty())
+        {
+            throw new ResourceNotFoundException("No low stock items found under the price : "+ threshold);
+        }
+    return lowStock;
     }
 
     public List<FoodItemResponse> searchFoodItems(String keyword) {
-        return foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
+        List<FoodItemResponse> searchedItems = foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+        if(searchedItems.isEmpty())
+        {
+            throw   new ResourceNotFoundException("no itmes Found for the keyword : " +keyword);
+        }
+    return searchedItems;
     }
 
 

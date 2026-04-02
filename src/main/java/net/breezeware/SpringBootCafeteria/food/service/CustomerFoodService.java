@@ -1,6 +1,7 @@
 package net.breezeware.SpringBootCafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
+import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
 import net.breezeware.SpringBootCafeteria.food.dto.CustomerFoodItemResponse;
 import net.breezeware.SpringBootCafeteria.food.dto.CustomerFoodMenuResponse;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodItem;
@@ -24,35 +25,60 @@ public class CustomerFoodService {
 
 
     public List<CustomerFoodMenuResponse> getMenusForDay(MenuDay day) {
-        return foodMenuRepository.findByMenuDay(day).stream()
+        List<CustomerFoodMenuResponse> menuForDay = foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
+      if(menuForDay.isEmpty())
+      {
+          throw  new ResourceNotFoundException("No menu fouund for the day: "+ day);
+      }
+    return menuForDay;
     }
 
     public List<CustomerFoodMenuResponse> getAllAvailableMenus() {
-        return foodMenuRepository.findAll().stream()
+        List<CustomerFoodMenuResponse> availableMenu = foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
+     if(availableMenu.isEmpty())
+     {
+         throw new ResourceNotFoundException("No available menus found list is empty");
+     }
+
+    return availableMenu;
     }
 
     public List<CustomerFoodItemResponse> getAvailableFoodItems() {
-        return foodItemRepository.findAvailableItems().stream()
+        List<CustomerFoodItemResponse> availableItems=  foodItemRepository.findAvailableItems().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
-    }
+        if(availableItems.isEmpty())
+        {
+            throw new ResourceNotFoundException("No available Items found");
+        }
+    return availableItems;}
 
     public List<CustomerFoodItemResponse> getFoodItemsByCategory(String category) {
-        return foodItemRepository.findByCategory(category).stream()
+        List<CustomerFoodItemResponse> itemByCat = foodItemRepository.findByCategory(category).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+    if(itemByCat.isEmpty())
+    {
+        throw new ResourceNotFoundException("No items found for the category: " + category);
+    }
+    return itemByCat;
     }
 
     public List<CustomerFoodItemResponse> searchFoodItems(String keyword) {
-        return foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
+        List<CustomerFoodItemResponse> searchItems = foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+        if(searchItems.isEmpty())
+        {
+            throw new ResourceNotFoundException("No items found for the keyword : " + keyword);
+        }
+  return   searchItems;
     }
 
 

@@ -2,6 +2,8 @@ package net.breezeware.SpringBootCafeteria.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.breezeware.SpringBootCafeteria.exception.InvalidStatusException;
+import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderDetailDto;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
@@ -9,6 +11,9 @@ import net.breezeware.SpringBootCafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
+import net.breezeware.SpringBootCafeteria.user.entity.User;
+import net.breezeware.SpringBootCafeteria.user.repo.UserRepository;
+import net.breezeware.SpringBootCafeteria.user.service.DeliveryStaffService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,45 +29,62 @@ public class AdminOrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDeliveryMapRepository orderDeliveryMapRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getAllOrders() {
         log.info("Admin fetching all orders");
-        return orderRepository.findAll().stream()
+        List<OrderSummaryDetailDto> orders = orderRepository.findAll().stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
-    }
+      if(orders.isEmpty())
+      {
+          throw new ResourceNotFoundException("No orders found in the system");
+      }
+
+    return orders;}
 
     @Transactional(readOnly = true)
     public OrderDetailDto getOrderById(Long orderId) {
         log.info("Admin fetching order by id: {}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         return mapToDetail(order);
     }
 
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getOrdersByStatus(OrderStatus status) {
         log.info("Admin fetching orders by status: {}", status);
-        return orderRepository.findByStatus(status).stream()
+        List<OrderSummaryDetailDto> ordersByStatus = orderRepository.findByStatus(status).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
+          if(ordersByStatus.isEmpty())
+          {
+              throw new ResourceNotFoundException("No orders found for the status: " + status);
+          }
+   return ordersByStatus;
     }
 
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getOrdersByUserId(Long userId) {
         log.info("Admin fetching orders for user: {}", userId);
-        return orderRepository.findByUserId(userId).stream()
+        List<OrderSummaryDetailDto> ordersById = orderRepository.findByUserId(userId).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
+
+        if(ordersById.isEmpty())
+        {
+            throw new ResourceNotFoundException("No orders found for the user with id :" + userId);
+        }
+        return ordersById;
     }
 
     public OrderDetailDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
         log.info("Admin updating order {} status to {}", orderId, newStatus);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         if (!order.getStatus().canTransitionTo(newStatus)) {
-            throw new RuntimeException("Invalid status transition: " + order.getStatus() + " -> " + newStatus);
+            throw new InvalidStatusException("Invalid status transition: " + order.getStatus() + " -> " + newStatus);
         }
         order.setStatus(newStatus);
         Order updated = orderRepository.save(order);
@@ -72,14 +94,16 @@ public class AdminOrderService {
     public OrderDetailDto assignDeliveryStaff(Long orderId, Long staffId) {
         log.info("Admin assigning delivery staff {} to order {}", staffId, orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         if (order.getStatus() != OrderStatus.ORDER_PREPARING) {
-            throw new RuntimeException("Order must be in ORDER_PREPARING status to assign delivery staff");
+            throw new InvalidStatusException("Order must be in ORDER_PREPARING status to assign delivery staff");
         }
 
+
+
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("No delivery details found for order: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("No delivery details found for order: " + orderId));
         deliveryMap.setDeliveryStaffId(staffId);
         orderDeliveryMapRepository.save(deliveryMap);
 
@@ -91,9 +115,9 @@ public class AdminOrderService {
     public OrderDetailDto cancelOrder(Long orderId) {
         log.info("Admin force cancelling order: {}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
         if (!order.getStatus().isForceCancellable()) {
-            throw new RuntimeException("Order is already delivered or cancelled, cannot cancel.");
+            throw new InvalidStatusException("Order is already delivered or cancelled, cannot cancel.");
         }
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
@@ -133,7 +157,7 @@ public class AdminOrderService {
         }
 
         return new OrderDetailDto(
-                order.getId().longValue(),
+                order.getId(),
                 order.getUser().getId().intValue(),
                 order.getUser().getName(),
                 order.getStatus(),

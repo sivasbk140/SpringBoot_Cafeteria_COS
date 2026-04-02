@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.service.AdminUserService;
@@ -32,8 +33,8 @@ public class AdminUserController {
             @ApiResponse(responseCode = "201", description = "Admin registered successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content)
+          //  @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
@@ -47,11 +48,11 @@ public class AdminUserController {
             @ApiResponse(responseCode = "200", description = "Login successful",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = UserResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content)
+          //  @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> login(@RequestBody UserRequestDto request) {
+    public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");
         UserResponseDto response = adminUserService.login(request);
         return ResponseEntity.ok(response);
@@ -61,8 +62,8 @@ public class AdminUserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class)))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
+         //   @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
@@ -75,8 +76,8 @@ public class AdminUserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users retrieved",
                     content = @Content(mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class)))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                            array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
+           // @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {

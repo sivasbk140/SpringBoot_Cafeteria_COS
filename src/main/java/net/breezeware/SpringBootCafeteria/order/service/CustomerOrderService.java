@@ -2,6 +2,8 @@ package net.breezeware.SpringBootCafeteria.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.breezeware.SpringBootCafeteria.exception.InsufficientStockException;
+import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodItem;
 import net.breezeware.SpringBootCafeteria.food.repo.FoodItemRepository;
 import net.breezeware.SpringBootCafeteria.order.dto.CartItemDto;
@@ -51,10 +53,10 @@ public class CustomerOrderService {
         log.info("Adding foodItem: {} to cart for userId: {}", foodItemName, userId);
 
         FoodItem foodItem = foodItemRepository.findByNameIgnoreCase(foodItemName)
-                .orElseThrow(() -> new RuntimeException("Food item not found with name: " + foodItemName));
+                .orElseThrow(() -> new ResourceNotFoundException("Food item not found with name: " + foodItemName));
 
         if (!foodItem.hasStock(quantity)) {
-            throw new RuntimeException("Insufficient stock for item: " + foodItem.getName());
+            throw new InsufficientStockException("Insufficient stock for item: " + foodItem.getName());
         }
 
         List<CartItemDto> cart = cartStore.computeIfAbsent(userId, k -> new ArrayList<>());
@@ -96,7 +98,8 @@ public class CustomerOrderService {
     public List<CartItemDto> removeFromCart(Long userId, String foodItemName) {
         log.info("Removing foodItem: {} from cart for userId: {}", foodItemName, userId);
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
-        cart.removeIf(item -> item.getFoodItemName().equalsIgnoreCase(foodItemName));
+        cart.removeIf(item -> item.getFoodItemName().equalsIgnoreCase(foodItemName,
+        elseThrow(new ResourceNotFoundException("No food item named as :" + foodItemName) );
         return cart;
     }
 
@@ -109,11 +112,11 @@ public class CustomerOrderService {
 
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
         if (cart.isEmpty()) {
-            throw new RuntimeException("Cart is empty for userId: " + userId);
+            throw new ResourceNotFoundException("Cart is empty for userId: " + userId);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         Order order = new Order(user, OrderStatus.PLACED_ORDER);
 
@@ -123,7 +126,7 @@ public class CustomerOrderService {
 
             int qty = cartItem.getQuantity().intValue();
             if (!foodItem.hasStock(qty)) {
-                throw new RuntimeException("Insufficient stock for item: " + foodItem.getName());
+                throw new InsufficientStockException("Insufficient stock for item: " + foodItem.getName());
             }
 
             foodItem.reduceStock(qty);
@@ -191,9 +194,14 @@ public class CustomerOrderService {
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getMyOrders(Long userId) {
         log.info("Customer fetching orders for userId: {}", userId);
-        return orderRepository.findByUserId(userId).stream()
+        List<OrderSummaryDetailDto> myOrders = orderRepository.findByUserId(userId).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
+    if(myOrders.isEmpty())
+    {
+        throw new RuntimeException("No items found in the cart of the user with id :" + userId);
+    }
+        return myOrders;
     }
 
     // ═══════════════════════════════════════════════════════

@@ -13,6 +13,6 @@ public class UserRequestDto {
     String email;
     @Schema(description = "type the password " , example = "siva@123")
     String password;
-    @Schema(description = "the role of the user",example = "CUSTOMER")
+    @Schema(description = "the role of the user",example = "CUSTOMER // ADMIN // STAFF // DELIVERY_STAFF")
     Role role;
 }

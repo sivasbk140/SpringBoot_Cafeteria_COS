@@ -15,7 +15,7 @@ public class UserResponseDto  {
     String name;
     @Schema(description = "email of the user",example = "siva@gmail.com")
     String email;
-    @Schema(description = "role of the user",example = "CUSTOMER")
+    @Schema(description = "role of the user",example = "CUSTOMER // ADMIN // STAFF // DELIVERY_STAFF")
     Role role;
 
 }
