@@ -22,11 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * ADMIN FOOD CONTROLLER
- * Endpoints for admin to manage food items and menus
- * User Stories: 1, 2, 3, 4, 5, 6, 7, 8
- */
+
 @RestController
 @RequestMapping("/api/admin/food")
 @RequiredArgsConstructor
@@ -36,14 +32,7 @@ public class AdminFoodController {
 
     private final AdminFoodService adminFoodService;
 
-    // ═══════════════════════════════════════════════════════
-    // FOOD ITEMS - Stories 1, 2, 3, 4
-    // ═══════════════════════════════════════════════════════
 
-    /**
-     * STORY 1: Create Food Item
-     * POST /api/admin/food/items
-     */
     @Operation(summary = "Create food item", description = "Adds a new food item to the system")
     @ApiResponses({
             @ApiResponse(
@@ -67,10 +56,7 @@ public class AdminFoodController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * STORY 2: View All Food Items
-     * GET /api/admin/food/items
-     */
+
     @Operation(summary = "Get all food items", description = "Fetches all available food items")
     @ApiResponses({
             @ApiResponse(
@@ -92,10 +78,7 @@ public class AdminFoodController {
         return ResponseEntity.ok(items);
     }
 
-    /**
-     * STORY 2: View Food Item by ID
-     * GET /api/admin/food/items/{id}
-     */
+
     @Operation(summary = "Get food item by ID", description = "Fetches a food item for the given ID")
     @ApiResponses({
             @ApiResponse(
@@ -118,10 +101,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(item);
     }
 
-    /**
-     * STORY 3: Update Food Item
-     * PUT /api/admin/food/items/{id}
-     */
+
+
     @Operation(summary = "Update food item", description = "Updates an existing food item by ID")
     @ApiResponses({
             @ApiResponse(
@@ -147,10 +128,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * STORY 4: Delete Food Item
-     * DELETE /api/admin/food/items/{id}
-     */
+
+
     @Operation(summary = "Delete food item", description = "Deletes a food item by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Food item deleted successfully", content = @Content),
@@ -163,10 +142,8 @@ public class AdminFoodController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Get food items by category
-     * GET /api/admin/food/items/category/{category}
-     */
+
+
     @Operation(summary = "Get food items by category", description = "Fetches all food items for a given category")
     @ApiResponses({
             @ApiResponse(
@@ -189,10 +166,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(items);
     }
 
-    /**
-     * Get low stock items
-     * GET /api/admin/food/items/low-stock?threshold=10
-     */
+
+
     @Operation(summary = "Get low stock food items", description = "Fetches food items with quantity at or below the threshold")
     @ApiResponses({
             @ApiResponse(
@@ -215,10 +190,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(items);
     }
 
-    /**
-     * Search food items
-     * GET /api/admin/food/items/search?keyword=burger
-     */
+
+
     @Operation(summary = "Search food items", description = "Searches food items by name keyword")
     @ApiResponses({
             @ApiResponse(
@@ -241,14 +214,9 @@ public class AdminFoodController {
         return ResponseEntity.ok(items);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // MENUS - Stories 5, 6, 7, 8
-    // ═══════════════════════════════════════════════════════
 
-    /**
-     * STORY 5: Create Food Menu
-     * POST /api/admin/food/menus
-     */
+
+
     @Operation(summary = "Create food menu", description = "Creates a new food menu with items and availability days")
     @ApiResponses({
             @ApiResponse(
@@ -269,10 +237,8 @@ public class AdminFoodController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * STORY 6: View All Food Menus
-     * GET /api/admin/food/menus
-     */
+
+
     @Operation(summary = "Get all food menus", description = "Fetches all food menus")
     @ApiResponses({
             @ApiResponse(
@@ -291,10 +257,7 @@ public class AdminFoodController {
         return ResponseEntity.ok(menus);
     }
 
-    /**
-     * STORY 6: View Food Menu by ID
-     * GET /api/admin/food/menus/{id}
-     */
+
     @Operation(summary = "Get food menu by ID", description = "Fetches a food menu for the given ID")
     @ApiResponses({
             @ApiResponse(
@@ -314,10 +277,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(menu);
     }
 
-    /**
-     * Get menus for a specific day
-     * GET /api/admin/food/menus/day/{day}
-     */
+
+
     @Operation(summary = "Get food menus by day", description = "Fetches all menus (BREAKFAST, LUNCH, DINNER) for the given day")
     @ApiResponses({
             @ApiResponse(
@@ -336,10 +297,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(menus);
     }
 
-    /**
-     * STORY 7: Update Food Menu
-     * PUT /api/admin/food/menus/{id}
-     */
+
+
     @Operation(summary = "Update food menu", description = "Updates an existing food menu by ID")
     @ApiResponses({
             @ApiResponse(
@@ -361,10 +320,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * STORY 8: Delete Food Menu
-     * DELETE /api/admin/food/menus/{id}
-     */
+
+
     @Operation(summary = "Delete food menu", description = "Deletes a food menu by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Food menu deleted successfully", content = @Content),
@@ -377,10 +334,8 @@ public class AdminFoodController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Add food item to menu
-     * POST /api/admin/food/menus/{menuId}/items/{foodItemId}
-     */
+
+
     @Operation(summary = "Add food item to menu", description = "Adds an existing food item to a menu")
     @ApiResponses({
             @ApiResponse(
@@ -402,10 +357,8 @@ public class AdminFoodController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Remove food item from menu
-     * DELETE /api/admin/food/menus/{menuId}/items/{foodItemId}
-     */
+
+
     @Operation(summary = "Remove food item from menu", description = "Removes a food item from a menu")
     @ApiResponses({
             @ApiResponse(
@@ -427,10 +380,6 @@ public class AdminFoodController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Set menu availability days
-     * PUT /api/admin/food/menus/{menuId}/availability
-     * Body: ["MONDAY", "WEDNESDAY", "FRIDAY"]
-     */
+
 
 }

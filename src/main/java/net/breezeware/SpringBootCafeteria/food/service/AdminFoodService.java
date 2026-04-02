@@ -25,9 +25,7 @@ public class AdminFoodService {
     private final FoodItemRepository foodItemRepository;
     private final FoodMenuRepository foodMenuRepository;
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 1: Create Food Item
-    // ═══════════════════════════════════════════════════════
+
     public FoodItemResponse createFoodItem(FoodItemRequest request) {
         FoodItem foodItem = new FoodItem(
                 request.getName(),
@@ -41,9 +39,7 @@ public class AdminFoodService {
         return mapFoodItemToResponse(saved);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 2: View Food Items
-    // ═══════════════════════════════════════════════════════
+
     public FoodItemResponse getFoodItemById(Long id) {
         FoodItem foodItem = foodItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
@@ -62,9 +58,7 @@ public class AdminFoodService {
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 3: Update Food Item
-    // ═══════════════════════════════════════════════════════
+
     public FoodItemResponse updateFoodItem(Long id, FoodItemRequest request) {
         FoodItem foodItem = foodItemRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Food item not found with id: " + id));
@@ -79,9 +73,7 @@ public class AdminFoodService {
         return mapFoodItemToResponse(updated);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 4: Delete Food Item
-    // ═══════════════════════════════════════════════════════
+
     public void deleteFoodItem(Long id) {
         if (!foodItemRepository.existsById(id)) {
             throw new RuntimeException("Food item not found with id: " + id);
@@ -89,9 +81,7 @@ public class AdminFoodService {
         foodItemRepository.deleteById(id);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 5: Create Food Menu
-    // ═══════════════════════════════════════════════════════
+
     public AdminFoodMenuResponse createFoodMenu(FoodMenuRequest request) {
         FoodMenu menu = new FoodMenu(request.getCategory(), request.getMenuDay());
 
@@ -107,9 +97,7 @@ public class AdminFoodService {
         return mapMenuToResponse(saved);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 6: View Food Menu
-    // ═══════════════════════════════════════════════════════
+
     public AdminFoodMenuResponse getFoodMenuById(Long id) {
         FoodMenu menu = foodMenuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
@@ -129,9 +117,7 @@ public class AdminFoodService {
     }
 
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 7: Update Food Menu
-    // ═══════════════════════════════════════════════════════
+
     public AdminFoodMenuResponse updateFoodMenu(Long id, FoodMenuRequest request) {
         FoodMenu menu = foodMenuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Menu not found with id: " + id));
@@ -152,9 +138,7 @@ public class AdminFoodService {
         return mapMenuToResponse(updated);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 8: Delete Food Menu
-    // ═══════════════════════════════════════════════════════
+
     public void deleteFoodMenu(Long id) {
         if (!foodMenuRepository.existsById(id)) {
             throw new RuntimeException("Menu not found with id: " + id);
@@ -162,9 +146,6 @@ public class AdminFoodService {
         foodMenuRepository.deleteById(id);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Additional Admin Operations
-    // ═══════════════════════════════════════════════════════
 
     public AdminFoodMenuResponse addFoodItemToMenu(Long menuId, Long foodItemId) {
         FoodMenu menu = foodMenuRepository.findById(menuId)
@@ -203,9 +184,7 @@ public class AdminFoodService {
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Helper Methods
-    // ═══════════════════════════════════════════════════════
+
 
     private FoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
         return new FoodItemResponse(

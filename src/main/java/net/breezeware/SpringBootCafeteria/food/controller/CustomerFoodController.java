@@ -16,11 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * CUSTOMER FOOD CONTROLLER
- * Endpoints for customers to view menus and food items
- * User Story: 9
- */
 @RestController
 @RequestMapping("/api/customer/food")
 @RequiredArgsConstructor
@@ -29,10 +24,7 @@ public class CustomerFoodController {
 
     private final CustomerFoodService customerFoodService;
 
-    /**
-     * STORY 9: View menus available for specific day
-     * GET /api/customer/food/menus/day/{day}
-     */
+
     @Operation(summary = "Get menus for a specific day", description = "Returns all menus available on the given day (e.g. MONDAY)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Menus retrieved",
@@ -46,10 +38,7 @@ public class CustomerFoodController {
         return ResponseEntity.ok(menus);
     }
 
-    /**
-     * View all available menus
-     * GET /api/customer/food/menus
-     */
+
     @Operation(summary = "Get all available menus", description = "Returns all food menus visible to the customer")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Menus retrieved",
@@ -63,10 +52,7 @@ public class CustomerFoodController {
         return ResponseEntity.ok(menus);
     }
 
-    /**
-     * View available food items only (quantity > 0)
-     * GET /api/customer/food/items/available
-     */
+
     @Operation(summary = "Get available food items", description = "Returns only food items with quantity greater than 0")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Available food items retrieved",
@@ -80,10 +66,7 @@ public class CustomerFoodController {
         return ResponseEntity.ok(items);
     }
 
-    /**
-     * View food items by category
-     * GET /api/customer/food/items/category/{category}
-     */
+
     @Operation(summary = "Get food items by category", description = "Returns available food items for the given category")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Food items retrieved",
@@ -97,10 +80,7 @@ public class CustomerFoodController {
         return ResponseEntity.ok(items);
     }
 
-    /**
-     * Search food items by name
-     * GET /api/customer/food/items/search?keyword=burger
-     */
+
     @Operation(summary = "Search food items", description = "Searches available food items by name keyword")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Search results returned",

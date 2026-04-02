@@ -22,9 +22,7 @@ public class CustomerFoodService {
     private final FoodMenuRepository foodMenuRepository;
     private final FoodItemRepository foodItemRepository;
 
-    // ═══════════════════════════════════════════════════════
-    // STORY 9: View Food Menu for Specific Day
-    // ═══════════════════════════════════════════════════════
+
     public List<CustomerFoodMenuResponse> getMenusForDay(MenuDay day) {
         return foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
@@ -57,9 +55,7 @@ public class CustomerFoodService {
                 .collect(Collectors.toList());
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Helper Methods
-    // ═══════════════════════════════════════════════════════
+
 
     private CustomerFoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
         return new CustomerFoodItemResponse(
