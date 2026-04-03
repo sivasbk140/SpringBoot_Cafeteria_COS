@@ -12,8 +12,8 @@ import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
+import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
 import net.breezeware.SpringBootCafeteria.user.repo.UserRepository;
-import net.breezeware.SpringBootCafeteria.user.service.DeliveryStaffService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,6 +101,13 @@ public class AdminOrderService {
         }
 
 
+
+        User deliveryStaff = userRepository.findById(staffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Delivery staff not found with id: " + staffId));
+
+        if (deliveryStaff.getRole() != Role.DELIVERY_STAFF) {
+            throw new InvalidStatusException("User with id " + staffId + " is not a delivery staff");
+        }
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("No delivery details found for order: " + orderId));

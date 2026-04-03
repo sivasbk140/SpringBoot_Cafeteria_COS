@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.order.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Delivery Staff Order APIs", description = "APIs for delivery staff to view assigned orders and mark them as delivered")
 @Slf4j
 @RestController
 @RequestMapping("/api/delivery/orders")

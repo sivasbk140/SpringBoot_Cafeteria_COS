@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.food.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Customer Food APIs", description = "APIs for customers to browse food items and menus")
 @RestController
 @RequestMapping("/api/customer/food")
 @RequiredArgsConstructor

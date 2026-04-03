@@ -1,5 +1,6 @@
 package net.breezeware.SpringBootCafeteria.user.service;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
@@ -14,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,7 +75,7 @@ class AdminUserServiceTest {
 
         // Arrange
         List<User> userList = new ArrayList<>();
-//
+
         userList.add(new User("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN));
         userList.add(new User("Sik", "sik@gmail.com", "sik@123", Role.ADMIN));
 
@@ -92,15 +92,14 @@ class AdminUserServiceTest {
     @Test
     void get_all_users_empty_list() {
 
-        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findAll()).thenReturn(new ArrayList<>());
 
-        // Act
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            adminUserService.getAllUsers();
+        });
 
-        List<UserResponseDto> responseList = adminUserService.getAllUsers();
-
-        // Assert
-        assertNotNull(responseList);
-        assertTrue(responseList.isEmpty());
+        assertEquals("No users found in the system", exception.getMessage());
 
         verify(userRepository, times(1)).findAll();
     }
@@ -108,9 +107,6 @@ class AdminUserServiceTest {
 
     @Test
     void get_by_id_success() {
-
-
-        //  User user = new User(null,null,null,null);
 
         User user = new User("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
 
@@ -147,8 +143,8 @@ class AdminUserServiceTest {
     void login_success() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         User user =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
@@ -167,14 +163,12 @@ class AdminUserServiceTest {
         verify(userRepository).findByEmail("sikar@gmail.com");
     }
 
-
-
     @Test
     void login_failed_user_not_found() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         when(userRepository.findByEmail("sikar@gmail.com"))
                 .thenReturn(Optional.empty());

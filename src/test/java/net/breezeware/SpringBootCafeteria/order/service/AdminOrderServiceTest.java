@@ -3,10 +3,13 @@ package net.breezeware.SpringBootCafeteria.order.service;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderDetailDto;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
+import net.breezeware.SpringBootCafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
+import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
+import net.breezeware.SpringBootCafeteria.user.repo.UserRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +33,9 @@ public class AdminOrderServiceTest {
     @Mock
     private OrderDeliveryMapRepository orderDeliveryMapRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private AdminOrderService adminOrderService;
 
@@ -38,7 +44,6 @@ public class AdminOrderServiceTest {
 
     @BeforeEach
     void setUp() {
-
 
         user1 = new User();
         user1.setId(101L);
@@ -81,12 +86,9 @@ public class AdminOrderServiceTest {
         List<OrderSummaryDetailDto> result = adminOrderService.getAllOrders();
 
         assertNotNull(result);
-
-        // assuming service filters only PLACED_ORDER
         assertEquals(3, result.size());
 
         OrderSummaryDetailDto dto1 = result.get(0);
-
         assertEquals(1L, dto1.getOrderId());
         assertEquals(101L, dto1.getUserId());
         assertEquals(OrderStatus.PLACED_ORDER, dto1.getStatus());
@@ -96,14 +98,14 @@ public class AdminOrderServiceTest {
     }
 
     @Test
-    void getAllOrders_shouldReturnEmptyList_whenNoOrdersExist() {
+    void getAllOrders_shouldThrowException_whenNoOrdersExist() {
 
         when(orderRepository.findAll()).thenReturn(List.of());
 
-        List<OrderSummaryDetailDto> result = adminOrderService.getAllOrders();
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                adminOrderService.getAllOrders());
 
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertEquals("No orders found in the system", exception.getMessage());
 
         verify(orderRepository, times(1)).findAll();
     }
@@ -127,13 +129,10 @@ public class AdminOrderServiceTest {
 
         when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            adminOrderService.getOrderById(1L);
-        });
+        assertThrows(RuntimeException.class, () -> adminOrderService.getOrderById(1L));
 
         verify(orderRepository, times(1)).findById(1L);
     }
-
 
     @Test
     void getOrdersByStatus_shouldReturnOrders_whenStatusIsPlaced() {
@@ -146,27 +145,22 @@ public class AdminOrderServiceTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-
         assertEquals(OrderStatus.PLACED_ORDER, result.get(0).getStatus());
         assertEquals(OrderStatus.PLACED_ORDER, result.get(1).getStatus());
 
-        verify(orderRepository, times(1))
-                .findByStatus(OrderStatus.PLACED_ORDER);
+        verify(orderRepository, times(1)).findByStatus(OrderStatus.PLACED_ORDER);
     }
 
     @Test
     void cancelOrder_shouldCancelOrder_whenOrderIsCancellable() {
 
-        // Arrange
-        order1.setStatus(OrderStatus.PLACED_ORDER); // cancellable
+        order1.setStatus(OrderStatus.PLACED_ORDER);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
         when(orderRepository.save(any(Order.class))).thenReturn(order1);
 
-        // Act
         OrderDetailDto result = adminOrderService.cancelOrder(1L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(OrderStatus.ORDER_CANCELLED, result.getStatus());
 
@@ -177,16 +171,13 @@ public class AdminOrderServiceTest {
     @Test
     void cancelOrder_shouldCancelOrder_whenOrderIsForceCancelable() {
 
-        // Arrange
-        order1.setStatus(OrderStatus.ORDER_PREPARING); // isForceCcancellable
+        order1.setStatus(OrderStatus.ORDER_PREPARING);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
         when(orderRepository.save(any(Order.class))).thenReturn(order1);
 
-        // Act
         OrderDetailDto result = adminOrderService.cancelOrder(1L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(OrderStatus.ORDER_CANCELLED, result.getStatus());
 
@@ -194,16 +185,13 @@ public class AdminOrderServiceTest {
         verify(orderRepository, times(1)).save(order1);
     }
 
-
     @Test
     void cancelOrder_shouldNotCancelOrder_whenOrderIsDelivered() {
 
-        // Arrange
         order1.setStatus(OrderStatus.ORDER_DELIVERED);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
 
-        // Act + Assert
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> adminOrderService.cancelOrder(1L));
 
@@ -217,62 +205,44 @@ public class AdminOrderServiceTest {
     @Test
     void getOrderByUserId_shouldReturnMultipleOrders_forSameUser() {
 
-
         when(orderRepository.findByUserId(101L))
                 .thenReturn(List.of(order1, order4));
 
-        // Act
         List<OrderSummaryDetailDto> result =
                 adminOrderService.getOrdersByUserId(101L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
-
         assertEquals(1L, result.get(0).getOrderId());
         assertEquals(4L, result.get(1).getOrderId());
 
-
-        for (OrderSummaryDetailDto dto : result) {
-            assertNotNull(dto.getOrderId());
-        }
-
-        // Verify
         verify(orderRepository, times(1)).findByUserId(101L);
     }
 
     @Test
-    void getOrdersByUserId_shouldReturnEmptyList_whenUserHasNoOrders() {
+    void getOrdersByUserId_shouldThrowException_whenUserHasNoOrders() {
 
-        // Arrange
         when(orderRepository.findByUserId(101L)).thenReturn(List.of());
 
-        // Act
-        List<OrderSummaryDetailDto> result =
-                adminOrderService.getOrdersByUserId(101L);
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                adminOrderService.getOrdersByUserId(101L));
 
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertEquals("No orders found for the user with id :101", exception.getMessage());
 
-        // Verify
         verify(orderRepository, times(1)).findByUserId(101L);
     }
 
     @Test
     void updateOrderStatus_shouldUpdateStatus_whenValidTransition() {
 
-        // Arrange
         order1.setStatus(OrderStatus.PLACED_ORDER);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
         when(orderRepository.save(any(Order.class))).thenReturn(order1);
 
-        // Act
         OrderDetailDto result =
                 adminOrderService.updateOrderStatus(1L, OrderStatus.ORDER_CONFIRMED);
 
-        // Assert
         assertNotNull(result);
         assertEquals(OrderStatus.ORDER_CONFIRMED, result.getStatus());
 
@@ -280,20 +250,82 @@ public class AdminOrderServiceTest {
         verify(orderRepository, times(1)).save(order1);
     }
 
-
     @Test
-    void updateOrderStatus_shouldThrowException_whenStatusIsCancelled() {
+    void updateOrderStatus_shouldThrowException_whenOrderNotFound() {
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                adminOrderService.updateOrderStatus(1L, OrderStatus.ORDER_CANCELLED)
-        );
+                adminOrderService.updateOrderStatus(1L, OrderStatus.ORDER_CONFIRMED));
 
         assertEquals("Order not found with id: 1", exception.getMessage());
 
-        verify(orderRepository, never()).findById(any());
+        verify(orderRepository, times(1)).findById(1L);
         verify(orderRepository, never()).save(any());
     }
+
+    @Test
+    void assignDeliveryStaff_success() {
+
+        order1.setStatus(OrderStatus.ORDER_PREPARING);
+
+        User deliveryStaff = new User();
+        deliveryStaff.setId(200L);
+        deliveryStaff.setRole(Role.DELIVERY_STAFF);
+
+        OrderDeliveryMap deliveryMap = new OrderDeliveryMap();
+        deliveryMap.setOrderId(1L);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
+        when(userRepository.findById(200L)).thenReturn(Optional.of(deliveryStaff));
+        when(orderDeliveryMapRepository.findByOrderId(1L)).thenReturn(Optional.of(deliveryMap));
+        when(orderRepository.save(any(Order.class))).thenReturn(order1);
+
+        OrderDetailDto result = adminOrderService.assignDeliveryStaff(1L, 200L);
+
+        assertNotNull(result);
+        assertEquals(OrderStatus.ASSIGNED_DELIVERY_STAFF, result.getStatus());
+        assertEquals(200L, deliveryMap.getDeliveryStaffId());
+
+        verify(userRepository, times(1)).findById(200L);
+        verify(orderDeliveryMapRepository, times(1)).save(deliveryMap);
+    }
+
+    @Test
+    void assignDeliveryStaff_shouldThrowException_whenDeliveryStaffNotFound() {
+
+        order1.setStatus(OrderStatus.ORDER_PREPARING);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
+        when(userRepository.findById(200L)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                adminOrderService.assignDeliveryStaff(1L, 200L));
+
+        assertEquals("Delivery staff not found with id: 200", exception.getMessage());
+
+        verify(userRepository, times(1)).findById(200L);
+        verify(orderDeliveryMapRepository, never()).findByOrderId(any());
+    }
+
+    @Test
+    void assignDeliveryStaff_shouldThrowException_whenUserIsNotDeliveryStaff() {
+
+        order1.setStatus(OrderStatus.ORDER_PREPARING);
+
+        User nonDeliveryUser = new User();
+        nonDeliveryUser.setId(200L);
+        nonDeliveryUser.setRole(Role.CUSTOMER);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order1));
+        when(userRepository.findById(200L)).thenReturn(Optional.of(nonDeliveryUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                adminOrderService.assignDeliveryStaff(1L, 200L));
+
+        assertEquals("User with id 200 is not a delivery staff", exception.getMessage());
+
+        verify(userRepository, times(1)).findById(200L);
+        verify(orderDeliveryMapRepository, never()).findByOrderId(any());
+    }
 }
-
-
-

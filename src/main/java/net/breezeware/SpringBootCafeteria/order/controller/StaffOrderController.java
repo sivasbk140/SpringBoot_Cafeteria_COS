@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.order.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,10 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * STAFF ORDER CONTROLLER
- * Endpoints for staff to view and update order delivery status
- */
+
+@Tag(name = "Staff Order APIs", description = "APIs for cafeteria staff to view, update status and manage orders")
 @Slf4j
 @RestController
 @RequestMapping("/api/staff/orders")

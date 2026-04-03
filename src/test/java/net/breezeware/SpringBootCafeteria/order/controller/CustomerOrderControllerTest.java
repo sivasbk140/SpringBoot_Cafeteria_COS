@@ -208,42 +208,42 @@ public class CustomerOrderControllerTest {
 
     @Test
     void removeFromCart_successCase() {
-        when(customerOrderService.removeFromCart(101L, "Burger"))
+        when(customerOrderService.removeFromCart(101L, "Burger", 1))
                 .thenReturn(List.of(cartItemDto2));
 
-        ResponseEntity<List<CartItemDto>> response = customerOrderController.removeFromCart(101L, "Burger");
+        ResponseEntity<List<CartItemDto>> response = customerOrderController.removeFromCart(101L, "Burger", 1);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
         assertEquals("Pizza", response.getBody().get(0).getFoodItemName());
-        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger");
+        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger", 1);
     }
 
     @Test
     void removeFromCart_lastItem_returnsEmptyCart() {
-        when(customerOrderService.removeFromCart(101L, "Burger"))
+        when(customerOrderService.removeFromCart(101L, "Burger", 2))
                 .thenReturn(List.of());
 
-        ResponseEntity<List<CartItemDto>> response = customerOrderController.removeFromCart(101L, "Burger");
+        ResponseEntity<List<CartItemDto>> response = customerOrderController.removeFromCart(101L, "Burger", 2);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(0, response.getBody().size());
-        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger");
+        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger", 2);
     }
 
     @Test
-    void removeFromCart_serviceThrowsException() {
-        when(customerOrderService.removeFromCart(101L, "Burger"))
-                .thenThrow(new RuntimeException("Database error"));
+    void removeFromCart_itemNotFound_throwsException() {
+        when(customerOrderService.removeFromCart(101L, "Burger", 1))
+                .thenThrow(new RuntimeException("Food item not found in cart: Burger"));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> customerOrderController.removeFromCart(101L, "Burger"));
+                () -> customerOrderController.removeFromCart(101L, "Burger", 1));
 
-        assertEquals("Database error", exception.getMessage());
-        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger");
+        assertEquals("Food item not found in cart: Burger", exception.getMessage());
+        verify(customerOrderService, times(1)).removeFromCart(101L, "Burger", 1);
     }
 
     // =========================================================================

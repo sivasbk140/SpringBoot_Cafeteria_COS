@@ -1,5 +1,6 @@
 package net.breezeware.SpringBootCafeteria.user.service;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
@@ -71,8 +72,8 @@ public class CustomerUserServiceTest {
     void login_success() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         User user =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
@@ -91,14 +92,12 @@ public class CustomerUserServiceTest {
         verify(userRepository).findByEmail("sikar@gmail.com");
     }
 
-
-
     @Test
     void login_failed_user_not_found() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         when(userRepository.findByEmail("sikar@gmail.com"))
                 .thenReturn(Optional.empty());

@@ -1,5 +1,6 @@
 package net.breezeware.SpringBootCafeteria.user.controller;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
@@ -25,6 +26,7 @@ public class CustomerUserControllerTest {
 
     @InjectMocks
     private CustomerUserController customerUserController;
+
     @Test
     void register_success() {
 
@@ -48,73 +50,59 @@ public class CustomerUserControllerTest {
     }
 
     @Test
-
-    public void register_failed()
-    {
+    public void register_failed() {
         UserRequestDto requestDto =
                 new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
         when(customerUserService.registerUser(requestDto))
                 .thenThrow(new RuntimeException("Email already exist"));
 
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {   customerUserController.registerUser(requestDto);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            customerUserController.registerUser(requestDto);
         });
 
-
-
-        assertEquals("Email already exist",exception.getMessage());
+        assertEquals("Email already exist", exception.getMessage());
         verify(customerUserService, times(1)).registerUser(requestDto);
-
     }
 
     @Test
-    public void login_successful()
-    {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
+    public void login_successful() {
+        UserLoginRequestDto loginDto =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         UserResponseDto responseDto =
                 new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.CUSTOMER);
 
-
-        when(customerUserService.login(requestDto))
+        when(customerUserService.login(loginDto))
                 .thenReturn(responseDto);
 
         ResponseEntity<UserResponseDto> response =
-                customerUserController.login(requestDto);
+                customerUserController.login(loginDto);
 
         // Assert
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
         assertEquals(1L, response.getBody().getId());
         assertEquals("Sikar", response.getBody().getName());
         assertEquals("sikar@gmail.com", response.getBody().getEmail());
         assertEquals(Role.CUSTOMER, response.getBody().getRole());
 
-        verify(customerUserService, times(1)).login(requestDto);
+        verify(customerUserService, times(1)).login(loginDto);
     }
 
     @Test
-    public  void  login_failed()
-    {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.CUSTOMER);
+    public void login_failed() {
+        UserLoginRequestDto loginDto =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
-        when(customerUserService.login(requestDto))
+        when(customerUserService.login(loginDto))
                 .thenThrow(new RuntimeException("Login Failed password or mail is wrong"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            customerUserController.login(requestDto);
+            customerUserController.login(loginDto);
         });
-
 
         assertEquals("Login Failed password or mail is wrong", exception.getMessage());
 
-
-        verify(customerUserService, times(1)).login(requestDto);
-
-
+        verify(customerUserService, times(1)).login(loginDto);
     }
 
 }

@@ -7,6 +7,9 @@ import net.breezeware.SpringBootCafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
 import net.breezeware.SpringBootCafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
+import net.breezeware.SpringBootCafeteria.exception.InvalidStatusException;
+import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
+import net.breezeware.SpringBootCafeteria.exception.UnauthorizedAccessException;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
 import org.springframework.stereotype.Service;
@@ -39,17 +42,17 @@ public class DeliveryStaffOrderService {
         log.info("Delivery staff {} marking order {} as delivered", staffId, orderId);
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("No delivery details found for order: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("No delivery details found for order: " + orderId));
 
         if (!staffId.equals(deliveryMap.getDeliveryStaffId())) {
-            throw new RuntimeException("Order " + orderId + " is not assigned to staff " + staffId);
+            throw new UnauthorizedAccessException("Order " + orderId + " is not assigned to staff " + staffId);
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         if (order.getStatus() != OrderStatus.ASSIGNED_DELIVERY_STAFF) {
-            throw new RuntimeException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered");
+            throw new InvalidStatusException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered");
         }
 
         order.setStatus(OrderStatus.ORDER_DELIVERED);

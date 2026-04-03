@@ -1,5 +1,6 @@
 package net.breezeware.SpringBootCafeteria.user.service;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
@@ -21,9 +22,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class StaffUserServiceTest {
-
-
-
 
     @Mock
     private UserRepository userRepository;
@@ -75,8 +73,8 @@ public class StaffUserServiceTest {
     void login_success() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         User user =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
@@ -95,14 +93,12 @@ public class StaffUserServiceTest {
         verify(userRepository).findByEmail("sikar@gmail.com");
     }
 
-
-
     @Test
     void login_failed_user_not_found() {
 
         // Arrange
-        UserRequestDto request =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserLoginRequestDto request =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         when(userRepository.findByEmail("sikar@gmail.com"))
                 .thenReturn(Optional.empty());

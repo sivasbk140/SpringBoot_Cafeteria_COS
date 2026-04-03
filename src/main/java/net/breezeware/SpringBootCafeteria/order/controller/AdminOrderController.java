@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.order.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Admin Order APIs", description = "APIs for admin to view, update, assign and cancel orders")
 @Slf4j
 @RestController
 @RequestMapping("/api/admin/orders")

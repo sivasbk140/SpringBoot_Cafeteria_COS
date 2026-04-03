@@ -1,9 +1,9 @@
 package net.breezeware.SpringBootCafeteria.user.controller;
 
+import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
-
 import net.breezeware.SpringBootCafeteria.user.service.DeliveryStaffService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,12 +21,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class DeliveryStaffControllerTest {
 
-
     @Mock
     private DeliveryStaffService deliveryStaffService;
 
     @InjectMocks
     private DeliveryStaffUserController deliveryStaffUserController;
+
     @Test
     void register_success() {
 
@@ -50,72 +50,58 @@ public class DeliveryStaffControllerTest {
     }
 
     @Test
-
-    public void register_failed()
-    {
+    public void register_failed() {
         UserRequestDto requestDto =
                 new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.DELIVERY_STAFF);
         when(deliveryStaffService.registerUser(requestDto))
                 .thenThrow(new RuntimeException("Email already exist"));
 
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {  deliveryStaffUserController.registerUser(requestDto);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            deliveryStaffUserController.registerUser(requestDto);
         });
 
-
-
-        assertEquals("Email already exist",exception.getMessage());
+        assertEquals("Email already exist", exception.getMessage());
         verify(deliveryStaffService, times(1)).registerUser(requestDto);
-
     }
 
     @Test
-    public void login_successful()
-    {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.DELIVERY_STAFF);
+    public void login_successful() {
+        UserLoginRequestDto loginDto =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
         UserResponseDto responseDto =
                 new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.DELIVERY_STAFF);
 
-
-        when(deliveryStaffService.login(requestDto))
+        when(deliveryStaffService.login(loginDto))
                 .thenReturn(responseDto);
 
         ResponseEntity<UserResponseDto> response =
-                deliveryStaffUserController.login(requestDto);
+                deliveryStaffUserController.login(loginDto);
 
         // Assert
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
-
         assertEquals(1L, response.getBody().getId());
         assertEquals("Sikar", response.getBody().getName());
         assertEquals("sikar@gmail.com", response.getBody().getEmail());
         assertEquals(Role.DELIVERY_STAFF, response.getBody().getRole());
 
-        verify(deliveryStaffService, times(1)).login(requestDto);
+        verify(deliveryStaffService, times(1)).login(loginDto);
     }
 
     @Test
-    public  void  login_failed()
-    {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.DELIVERY_STAFF);
+    public void login_failed() {
+        UserLoginRequestDto loginDto =
+                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
 
-        when(deliveryStaffService.login(requestDto))
+        when(deliveryStaffService.login(loginDto))
                 .thenThrow(new RuntimeException("Login Failed password or mail is wrong"));
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            deliveryStaffUserController.login(requestDto);
+            deliveryStaffUserController.login(loginDto);
         });
-
 
         assertEquals("Login Failed password or mail is wrong", exception.getMessage());
 
-
-        verify(deliveryStaffService, times(1)).login(requestDto);
-
-
+        verify(deliveryStaffService, times(1)).login(loginDto);
     }
 }

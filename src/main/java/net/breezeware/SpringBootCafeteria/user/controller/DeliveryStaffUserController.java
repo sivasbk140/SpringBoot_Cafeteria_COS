@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,13 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.*;
 
+@Tag(name = "Delivery Staff User APIs", description = "APIs for delivery staff registration and login")
 @Slf4j
-
 @RestController
 @RequestMapping("/api/deliveryStaff")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-
 public class DeliveryStaffUserController {
 
     private final DeliveryStaffService deliveryStaffService;

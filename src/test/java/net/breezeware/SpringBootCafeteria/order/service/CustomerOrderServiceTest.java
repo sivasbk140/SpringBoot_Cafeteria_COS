@@ -154,36 +154,73 @@ public class CustomerOrderServiceTest {
     }
 
     @Test
-    void removeItemFromCart()
-    {
+    void removeFromCart_shouldDecrementQuantity_whenQuantityIsPartial() {
         Long userId = 1L;
 
-        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg"); FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+        FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
 
-        when(foodItemRepository.findByNameIgnoreCase("Pizza"))
-                .thenReturn(Optional.of(pizza));
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+        when(foodItemRepository.findByNameIgnoreCase("Burger")).thenReturn(Optional.of(burger));
 
-        when(foodItemRepository.findByNameIgnoreCase("Burger"))
-                .thenReturn(Optional.of(burger));
+        customerOrderService.addToCart(userId, "Pizza", 3);   // qty=3, total=600
+        customerOrderService.addToCart(userId, "Burger", 3);  // qty=3, total=450
 
-        // Act
-        customerOrderService.addToCart(userId, "Pizza", 2);   // total = 400
-        customerOrderService.addToCart(userId, "Burger", 3);  // total = 450
+        // Remove 1 Pizza — should decrement, not remove
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 1);
 
-        List<CartItemDto> result = customerOrderService.removeFromCart(1L,"Pizza");
+        assertEquals(2, result.size());
 
+        CartItemDto pizzaItem = result.stream()
+                .filter(i -> i.getFoodItemName().equalsIgnoreCase("Pizza"))
+                .findFirst().orElseThrow();
+
+        assertEquals(2L, pizzaItem.getQuantity());
+        assertEquals(400.0, pizzaItem.getTotalPrice());
+    }
+
+    @Test
+    void removeFromCart_shouldRemoveItem_whenQuantityReachesZero() {
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+        FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+        when(foodItemRepository.findByNameIgnoreCase("Burger")).thenReturn(Optional.of(burger));
+
+        customerOrderService.addToCart(userId, "Pizza", 2);
+        customerOrderService.addToCart(userId, "Burger", 3);
+
+        // Remove all Pizza quantity
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 2);
 
         assertEquals(1, result.size());
-
+        assertTrue(result.stream().noneMatch(i -> i.getFoodItemName().equalsIgnoreCase("Pizza")));
     }
-    @Test
-    void removeFromCartShould_notRemoveItemIfCartIsEmpty()
-    {
-        List<CartItemDto> result = customerOrderService.removeFromCart(99L,"Pizza");
 
-        // Assert
-        assertNotNull(result);
+    @Test
+    void removeFromCart_shouldRemoveItem_whenQuantityExceedsCartQuantity() {
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+
+        customerOrderService.addToCart(userId, "Pizza", 2);
+
+        // Remove more than what's in cart — item should be fully removed
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 5);
+
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void removeFromCart_shouldThrowException_whenItemNotInCart() {
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerOrderService.removeFromCart(99L, "Pizza", 1));
+
+        assertEquals("Food item not found in cart: Pizza", exception.getMessage());
     }
 
 

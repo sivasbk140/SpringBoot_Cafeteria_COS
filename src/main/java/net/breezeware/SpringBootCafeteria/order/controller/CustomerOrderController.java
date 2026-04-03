@@ -2,6 +2,7 @@ package net.breezeware.SpringBootCafeteria.order.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,6 +26,7 @@ import java.util.List;
  * CUSTOMER ORDER CONTROLLER
  * Endpoints for customers to manage cart, place, view, and cancel orders
  */
+@Tag(name = "Customer Order APIs", description = "APIs for customers to manage cart, place orders, view order history and cancel orders")
 @Slf4j
 @RestController
 @RequestMapping("/api/customer/orders")
@@ -34,9 +36,6 @@ public class CustomerOrderController {
 
     private final CustomerOrderService customerOrderService;
 
-    // ═══════════════════════════════════════════════════════
-    // Cart Endpoints
-    // ═══════════════════════════════════════════════════════
 
     @Operation(summary = "Add item to cart", description = "Adds a food item to the customer's cart. If item already exists, quantity is increased.")
     @ApiResponses({
@@ -79,9 +78,10 @@ public class CustomerOrderController {
     @DeleteMapping("/cart/{userId}/remove")
     public ResponseEntity<List<CartItemDto>> removeFromCart(
             @PathVariable Long userId,
-            @RequestParam String foodItemName) {
-        log.info("DELETE /api/customer/orders/cart/{}/remove - removing item: {}", userId, foodItemName);
-        return ResponseEntity.ok(customerOrderService.removeFromCart(userId, foodItemName));
+            @RequestParam String foodItemName,
+            @RequestParam int quantity) {
+        log.info("DELETE /api/customer/orders/cart/{}/remove - removing {} unit(s) of item: {}", userId, quantity, foodItemName);
+        return ResponseEntity.ok(customerOrderService.removeFromCart(userId, foodItemName, quantity));
     }
 
     @Operation(summary = "Checkout cart", description = "Converts all cart items into a placed order. Clears the cart on success.")
@@ -101,9 +101,7 @@ public class CustomerOrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(customerOrderService.checkout(userId, deliveryRequest));
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Order Endpoints
-    // ═══════════════════════════════════════════════════════
+
 
     @Operation(summary = "Place order directly", description = "Places a new order directly with a list of items (bypasses cart)")
     @ApiResponses({
