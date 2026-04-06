@@ -2,11 +2,11 @@ package net.breezeware.SpringBootCafeteria.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class AppException extends RuntimeException {
+public class AppCustomException extends RuntimeException {
 
     private final HttpStatus status;
 
-    public AppException(String message, HttpStatus status) {
+    public AppCustomException(String message, HttpStatus status) {
         super(message);
         this.status = status;
     }

@@ -11,16 +11,15 @@ import java.util.List;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
 
 /**
- * JPA entity representing a user of the cafeteria system.
- * <p>
- * A user can have one of four roles: ADMIN, STAFF, CUSTOMER, or DELIVERY_STAFF.
- * Customers are associated with orders; delivery staff are associated with delivery details.
- * The {@code createdOn} and {@code updatedOn} timestamps are managed automatically
- * via {@code @PrePersist} and {@code @PreUpdate} hooks.
- * </p>
+ * Entity representing a user of the cafeteria system.
  *
- * @see Role
- * @see net.breezeware.SpringBootCafeteria.order.entity.Order
+ * <p>A user can hold one of four roles: ADMIN, STAFF, CUSTOMER, or DELIVERY_STAFF.
+ * Customers are associated with orders; delivery staff are associated with delivery details.
+ * Timestamps are managed automatically via JPA lifecycle hooks.</p>
+ *
+ * @author Siva
+ * @version 1.0
+ * @since 1.0
  */
 @Entity
 @Table(name = "users")
@@ -30,55 +29,99 @@ import net.breezeware.SpringBootCafeteria.order.entity.Order;
 @ToString(exclude = {"orders", "deliveryDetails"})
 public class User {
 
+    /**
+     * Unique identifier for the user.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Full name of the user.
+     */
     @NotBlank(message = "Name is required")
     @NonNull
     @Column(nullable = false, length = 100)
     private String name;
 
+    /**
+     * Email address of the user. Must be unique across all users.
+     */
     @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
     @NonNull
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    /**
+     * Hashed or plain-text password for authentication.
+     */
     @NotBlank(message = "Password is required")
     @NonNull
     @Column(nullable = false)
     private String password;
 
+    /**
+     * Role assigned to the user (ADMIN, STAFF, CUSTOMER, or DELIVERY_STAFF).
+     *
+     * <p>Stored as a string representation of {@link Role} enum.</p>
+     */
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Role is required")
     @NonNull
     @Column(nullable = false)
     private Role role;
 
+    /**
+     * List of orders placed by this user.
+     *
+     * <p>One-to-many relationship with Order entity.
+     * Cascade and orphan removal are enabled.</p>
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();
 
+    /**
+     * List of delivery detail records associated with this user.
+     *
+     * <p>One-to-many relationship with DeliveryDetail entity.
+     * Relevant for users with the DELIVERY_STAFF role.</p>
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DeliveryDetail> deliveryDetails = new ArrayList<>();
 
+    /**
+     * Timestamp when the user was created.
+     *
+     * <p>Automatically set during persistence and not updatable.</p>
+     */
     @Column(name = "created_on", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdOn;
 
+    /**
+     * Timestamp when the user record was last updated.
+     */
     @Column(name = "updated_on")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedOn;
 
-
-
-
+    /**
+     * Lifecycle callback executed before persisting the entity.
+     *
+     * <p>Initializes both createdOn and updatedOn timestamps.</p>
+     */
     @PrePersist
     protected void onCreate() {
         createdOn = new Date();
         updatedOn = new Date();
     }
 
+    /**
+     * Lifecycle callback executed before updating the entity.
+     *
+     * <p>Refreshes the updatedOn timestamp.</p>
+     */
     @PreUpdate
     protected void onUpdate() {
         updatedOn = new Date();
