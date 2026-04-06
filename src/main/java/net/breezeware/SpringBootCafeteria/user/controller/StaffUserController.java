@@ -16,6 +16,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for cafeteria staff user management.
+ * <p>
+ * Exposes endpoints for staff registration and login.
+ * Base path: {@code /api/staff}
+ * </p>
+ */
 @Tag(name = "Staff User APIs", description = "APIs for cafeteria staff registration and login")
 @Slf4j
 @RestController
@@ -34,6 +41,12 @@ public class StaffUserController {
             @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Registers a new cafeteria staff account.
+     *
+     * @param request the registration payload with name, email, and password
+     * @return HTTP 201 with the created staff member's profile in the response body
+     */
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
         log.info("Registering the staff user");
@@ -49,6 +62,12 @@ public class StaffUserController {
             @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Authenticates a cafeteria staff member with email and password.
+     *
+     * @param request the login payload with email and password
+     * @return HTTP 200 with the authenticated staff member's profile in the response body
+     */
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");

@@ -5,6 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO for user login requests.
+ * <p>
+ * Carries the email and password credentials submitted by any type of user
+ * during the authentication flow.
+ * </p>
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

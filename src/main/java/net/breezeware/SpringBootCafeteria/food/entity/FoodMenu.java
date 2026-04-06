@@ -10,6 +10,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA entity representing a daily food menu in the cafeteria.
+ * <p>
+ * Each menu is uniquely identified by its category (BREAKFAST, LUNCH, DINNER)
+ * and the day of the week ({@link MenuDay}). A menu contains a list of
+ * {@link FoodMenuItemMap} entries that link food items to this menu.
+ * Timestamps are managed automatically via lifecycle hooks.
+ * </p>
+ *
+ * @see FoodMenuItemMap
+ * @see MenuDay
+ */
 @Entity
 @Table(name = "food_menu", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"category", "menu_day"})
@@ -55,11 +67,21 @@ public class FoodMenu {
         updatedOn = LocalDateTime.now();
     }
 
+    /**
+     * Adds a food item mapping to this menu and sets the back-reference on the mapping.
+     *
+     * @param menuItem the {@link FoodMenuItemMap} to add to this menu
+     */
     public void addMenuItem(FoodMenuItemMap menuItem) {
         menuItems.add(menuItem);
         menuItem.setMenu(this);
     }
 
+    /**
+     * Removes a food item mapping from this menu and clears the back-reference.
+     *
+     * @param menuItem the {@link FoodMenuItemMap} to remove from this menu
+     */
     public void removeMenuItem(FoodMenuItemMap menuItem) {
         menuItems.remove(menuItem);
         menuItem.setMenu(null);

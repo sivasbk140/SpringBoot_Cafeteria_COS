@@ -6,6 +6,17 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * JPA entity representing the many-to-many mapping between a {@link FoodMenu} and a {@link FoodItem}.
+ * <p>
+ * Acts as a junction table ({@code food_menu_items_map}) that links food items to menus
+ * and tracks the individual availability flag for each item within a menu.
+ * When a new mapping is persisted, {@code isAvailable} defaults to {@code true}.
+ * </p>
+ *
+ * @see FoodMenu
+ * @see FoodItem
+ */
 @Entity
 @Table(name = "food_menu_items_map")
 @Data

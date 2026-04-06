@@ -2,11 +2,7 @@ package net.breezeware.SpringBootCafeteria.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.breezeware.SpringBootCafeteria.exception.DuplicateResourceException;
-import net.breezeware.SpringBootCafeteria.exception.InsufficientStockException;
-import net.breezeware.SpringBootCafeteria.exception.InvalidStatusException;
-import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
-import net.breezeware.SpringBootCafeteria.exception.UnauthorizedAccessException;
+import net.breezeware.SpringBootCafeteria.exception.AppException;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodItem;
 import net.breezeware.SpringBootCafeteria.food.repo.FoodItemRepository;
 import net.breezeware.SpringBootCafeteria.order.dto.CartItemDto;
@@ -23,6 +19,7 @@ import net.breezeware.SpringBootCafeteria.order.repo.OrderItemRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
 import net.breezeware.SpringBootCafeteria.user.repo.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,10 +53,10 @@ public class CustomerOrderService {
         log.info("Adding foodItem: {} to cart for userId: {}", foodItemName, userId);
 
         FoodItem foodItem = foodItemRepository.findByNameIgnoreCase(foodItemName)
-                .orElseThrow(() -> new ResourceNotFoundException("Food item not found with name: " + foodItemName));
+                .orElseThrow(() -> new AppException("Food item not found with name: " + foodItemName, HttpStatus.NOT_FOUND));
 
         if (!foodItem.hasStock(quantity)) {
-            throw new InsufficientStockException("Insufficient stock for item: " + foodItem.getName());
+            throw new AppException("Insufficient stock for item: " + foodItem.getName(), HttpStatus.BAD_REQUEST);
         }
 
         List<CartItemDto> cart = cartStore.computeIfAbsent(userId, k -> new ArrayList<>());
@@ -105,7 +102,7 @@ public class CustomerOrderService {
         CartItemDto item = cart.stream()
                 .filter(c -> c.getFoodItemName().equalsIgnoreCase(foodItemName))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Food item not found in cart: " + foodItemName));
+                .orElseThrow(() -> new AppException("Food item not found in cart: " + foodItemName, HttpStatus.NOT_FOUND));
 
         long newQuantity = item.getQuantity() - quantity;
         if (newQuantity <= 0) {
@@ -128,21 +125,21 @@ public class CustomerOrderService {
 
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
         if (cart.isEmpty()) {
-            throw new ResourceNotFoundException("Cart is empty for userId: " + userId);
+            throw new AppException("Cart is empty for userId: " + userId, HttpStatus.BAD_REQUEST);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new AppException("User not found with id: " + userId, HttpStatus.NOT_FOUND));
 
         Order order = new Order(user, OrderStatus.PLACED_ORDER);
 
         for (CartItemDto cartItem : cart) {
             FoodItem foodItem = foodItemRepository.findById(cartItem.getFoodItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Food item not found: " + cartItem.getFoodItemId()));
+                    .orElseThrow(() -> new AppException("Food item not found: " + cartItem.getFoodItemId(), HttpStatus.NOT_FOUND));
 
             int qty = cartItem.getQuantity().intValue();
             if (!foodItem.hasStock(qty)) {
-                throw new InsufficientStockException("Insufficient stock for item: " + foodItem.getName());
+                throw new AppException("Insufficient stock for item: " + foodItem.getName(), HttpStatus.BAD_REQUEST);
             }
 
             foodItem.reduceStock(qty);
@@ -171,21 +168,21 @@ public class CustomerOrderService {
         log.info("Customer placing order for userId: {}", request.getUser_id());
 
         User user = userRepository.findById(request.getUser_id())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUser_id()));
+                .orElseThrow(() -> new AppException("User not found with id: " + request.getUser_id(), HttpStatus.NOT_FOUND));
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new InvalidStatusException("Order must have at least one item");
+            throw new AppException("Order must have at least one item", HttpStatus.BAD_REQUEST);
         }
 
         Order order = new Order(user, OrderStatus.PLACED_ORDER);
 
         for (var itemReq : request.getItems()) {
             FoodItem foodItem = foodItemRepository.findById(itemReq.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Food item not found with id: " + itemReq.getId()));
+                    .orElseThrow(() -> new AppException("Food item not found with id: " + itemReq.getId(), HttpStatus.NOT_FOUND));
 
             int qty = itemReq.getQuantity().intValue();
             if (!foodItem.hasStock(qty)) {
-                throw new InsufficientStockException("Insufficient stock for item: " + foodItem.getName());
+                throw new AppException("Insufficient stock for item: " + foodItem.getName(), HttpStatus.BAD_REQUEST);
             }
 
             foodItem.reduceStock(qty);
@@ -213,10 +210,10 @@ public class CustomerOrderService {
         List<OrderSummaryDetailDto> myOrders = orderRepository.findByUserId(userId).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
-    if(myOrders.isEmpty())
-    {
-        throw new ResourceNotFoundException("No orders found for user with id: " + userId);
-    }
+
+        if (myOrders.isEmpty()) {
+            throw new AppException("No orders found for user with id: " + userId, HttpStatus.NOT_FOUND);
+        }
         return myOrders;
     }
 
@@ -228,10 +225,10 @@ public class CustomerOrderService {
     public OrderDetailDto getOrderDetail(Long orderId, Long userId) {
         log.info("Customer fetching order detail for orderId: {}, userId: {}", orderId, userId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (!order.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Access denied: Order does not belong to this user");
+            throw new AppException("Access denied: Order does not belong to this user", HttpStatus.FORBIDDEN);
         }
 
         return mapToDetail(order);
@@ -244,14 +241,14 @@ public class CustomerOrderService {
     public OrderDetailDto cancelOrder(Long orderId, Long userId) {
         log.info("Customer cancelling order: {}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (!order.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Access denied: Order does not belong to this user");
+            throw new AppException("Access denied: Order does not belong to this user", HttpStatus.FORBIDDEN);
         }
 
         if (!order.canBeCancelled()) {
-            throw new InvalidStatusException("Order cannot be cancelled in status: " + order.getStatus());
+            throw new AppException("Order cannot be cancelled in status: " + order.getStatus(), HttpStatus.BAD_REQUEST);
         }
 
         // Restore stock for each cancelled item
@@ -273,14 +270,14 @@ public class CustomerOrderService {
         log.info("Adding delivery details for orderId: {}, userId: {}", orderId, userId);
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (!order.getUser().getId().equals(userId)) {
-            throw new UnauthorizedAccessException("Access denied: Order does not belong to this user");
+            throw new AppException("Access denied: Order does not belong to this user", HttpStatus.FORBIDDEN);
         }
 
         if (orderDeliveryMapRepository.findByOrderId(orderId).isPresent()) {
-            throw new DuplicateResourceException("Delivery details already exist for this order");
+            throw new AppException("Delivery details already exist for this order", HttpStatus.CONFLICT);
         }
 
         OrderDeliveryMap delivery = new OrderDeliveryMap(order, request.getName(), request.getPhone(), request.getAddress());

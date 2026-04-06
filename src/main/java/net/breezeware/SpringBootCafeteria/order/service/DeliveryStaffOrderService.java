@@ -2,16 +2,15 @@ package net.breezeware.SpringBootCafeteria.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.breezeware.SpringBootCafeteria.exception.AppException;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderDetailDto;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
 import net.breezeware.SpringBootCafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
-import net.breezeware.SpringBootCafeteria.exception.InvalidStatusException;
-import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
-import net.breezeware.SpringBootCafeteria.exception.UnauthorizedAccessException;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,17 +41,17 @@ public class DeliveryStaffOrderService {
         log.info("Delivery staff {} marking order {} as delivered", staffId, orderId);
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("No delivery details found for order: " + orderId));
+                .orElseThrow(() -> new AppException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND));
 
         if (!staffId.equals(deliveryMap.getDeliveryStaffId())) {
-            throw new UnauthorizedAccessException("Order " + orderId + " is not assigned to staff " + staffId);
+            throw new AppException("Order " + orderId + " is not assigned to staff " + staffId, HttpStatus.FORBIDDEN);
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (order.getStatus() != OrderStatus.ASSIGNED_DELIVERY_STAFF) {
-            throw new InvalidStatusException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered");
+            throw new AppException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered", HttpStatus.BAD_REQUEST);
         }
 
         order.setStatus(OrderStatus.ORDER_DELIVERED);

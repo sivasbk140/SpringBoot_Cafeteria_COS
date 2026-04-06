@@ -1,7 +1,7 @@
 package net.breezeware.SpringBootCafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
-import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
+import net.breezeware.SpringBootCafeteria.exception.AppException;
 import net.breezeware.SpringBootCafeteria.food.dto.CustomerFoodItemResponse;
 import net.breezeware.SpringBootCafeteria.food.dto.CustomerFoodMenuResponse;
 import net.breezeware.SpringBootCafeteria.food.entity.FoodItem;
@@ -9,6 +9,7 @@ import net.breezeware.SpringBootCafeteria.food.entity.FoodMenu;
 import net.breezeware.SpringBootCafeteria.food.enumeration.MenuDay;
 import net.breezeware.SpringBootCafeteria.food.repo.FoodItemRepository;
 import net.breezeware.SpringBootCafeteria.food.repo.FoodMenuRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,50 +24,50 @@ public class CustomerFoodService {
     private final FoodMenuRepository foodMenuRepository;
     private final FoodItemRepository foodItemRepository;
 
-
     public List<CustomerFoodMenuResponse> getMenusForDay(MenuDay day) {
         List<CustomerFoodMenuResponse> menuForDay = foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
-      if(menuForDay.isEmpty())
-      {
-          throw  new ResourceNotFoundException("No menu fouund for the day: "+ day);
-      }
-    return menuForDay;
+
+        if (menuForDay.isEmpty()) {
+            throw new AppException("No menu found for the day: " + day, HttpStatus.NOT_FOUND);
+        }
+        return menuForDay;
     }
 
     public List<CustomerFoodMenuResponse> getAllAvailableMenus() {
         List<CustomerFoodMenuResponse> availableMenu = foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
-     if(availableMenu.isEmpty())
-     {
-         throw new ResourceNotFoundException("No available menus found list is empty");
-     }
 
-    return availableMenu;
+        if (availableMenu.isEmpty()) {
+            throw new AppException("No available menus found", HttpStatus.NOT_FOUND);
+        }
+
+        return availableMenu;
     }
 
     public List<CustomerFoodItemResponse> getAvailableFoodItems() {
-        List<CustomerFoodItemResponse> availableItems=  foodItemRepository.findAvailableItems().stream()
+        List<CustomerFoodItemResponse> availableItems = foodItemRepository.findAvailableItems().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
-        if(availableItems.isEmpty())
-        {
-            throw new ResourceNotFoundException("No available Items found");
+
+        if (availableItems.isEmpty()) {
+            throw new AppException("No available items found", HttpStatus.NOT_FOUND);
         }
-    return availableItems;}
+        return availableItems;
+    }
 
     public List<CustomerFoodItemResponse> getFoodItemsByCategory(String category) {
         List<CustomerFoodItemResponse> itemByCat = foodItemRepository.findByCategory(category).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
-    if(itemByCat.isEmpty())
-    {
-        throw new ResourceNotFoundException("No items found for the category: " + category);
-    }
-    return itemByCat;
+
+        if (itemByCat.isEmpty()) {
+            throw new AppException("No items found for the category: " + category, HttpStatus.NOT_FOUND);
+        }
+        return itemByCat;
     }
 
     public List<CustomerFoodItemResponse> searchFoodItems(String keyword) {
@@ -74,14 +75,12 @@ public class CustomerFoodService {
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
-        if(searchItems.isEmpty())
-        {
-            throw new ResourceNotFoundException("No items found for the keyword : " + keyword);
+
+        if (searchItems.isEmpty()) {
+            throw new AppException("No items found for the keyword: " + keyword, HttpStatus.NOT_FOUND);
         }
-  return   searchItems;
+        return searchItems;
     }
-
-
 
     private CustomerFoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
         return new CustomerFoodItemResponse(

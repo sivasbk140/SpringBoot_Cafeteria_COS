@@ -2,17 +2,16 @@ package net.breezeware.SpringBootCafeteria.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.breezeware.SpringBootCafeteria.exception.DuplicateResourceException;
-import net.breezeware.SpringBootCafeteria.exception.InvalidCredentialException;
+import net.breezeware.SpringBootCafeteria.exception.AppException;
 import net.breezeware.SpringBootCafeteria.user.dto.UserLoginRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserRequestDto;
 import net.breezeware.SpringBootCafeteria.user.dto.UserResponseDto;
 import net.breezeware.SpringBootCafeteria.user.entity.User;
 import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
 import net.breezeware.SpringBootCafeteria.user.repo.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.accept.InvalidApiVersionException;
 
 @Slf4j
 @Service
@@ -22,15 +21,13 @@ public class CustomerUserService {
 
     private final UserRepository userRepository;
 
-
     public UserResponseDto login(UserLoginRequestDto request) {
         log.info("customer logging In service layer");
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new InvalidCredentialException("Invalid email or password"));
-
+                .orElseThrow(() -> new AppException("Invalid email or password", HttpStatus.UNAUTHORIZED));
 
         if (!user.getPassword().equals(request.getPassword())) {
-            throw new InvalidCredentialException("Invalid email or password");
+            throw new AppException("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }
 
         return mapToResponse(user);
@@ -39,7 +36,7 @@ public class CustomerUserService {
     public UserResponseDto registerUser(UserRequestDto request) {
         log.info("Registering customer service layer");
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Email already registered");
+            throw new AppException("Email already registered", HttpStatus.CONFLICT);
         }
 
         User user = new User(

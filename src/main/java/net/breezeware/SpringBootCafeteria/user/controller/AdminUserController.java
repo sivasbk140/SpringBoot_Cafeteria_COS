@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for admin user management.
+ * <p>
+ * Exposes endpoints for admin registration, login, and viewing all users.
+ * Base path: {@code /api/Admin}
+ * </p>
+ */
 @Tag(name = "Admin User APIs", description = "APIs for admin to register, login and manage all users")
 @Slf4j
 @RestController
@@ -38,6 +45,12 @@ public class AdminUserController {
             @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content)
           //  @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Registers a new admin account.
+     *
+     * @param request the registration payload with name, email, password, and role
+     * @return HTTP 201 with the created admin's profile in the response body
+     */
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
         log.info("Registering the Admin user");
@@ -53,6 +66,12 @@ public class AdminUserController {
             @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content)
           //  @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Authenticates an admin with email and password.
+     *
+     * @param request the login payload with email and password
+     * @return HTTP 200 with the authenticated admin's profile in the response body
+     */
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");
@@ -67,6 +86,12 @@ public class AdminUserController {
                             array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
          //   @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Retrieves a user by their unique ID.
+     *
+     * @param id the ID of the user to retrieve
+     * @return HTTP 200 with the user's profile in the response body
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
         log.info("view user by user_id");
@@ -81,6 +106,11 @@ public class AdminUserController {
                             array = @ArraySchema(schema = @Schema(implementation = UserResponseDto.class))))
            // @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Retrieves all registered users in the system.
+     *
+     * @return HTTP 200 with a list of all user profiles in the response body
+     */
     @GetMapping
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
         List<UserResponseDto> users = adminUserService.getAllUsers();

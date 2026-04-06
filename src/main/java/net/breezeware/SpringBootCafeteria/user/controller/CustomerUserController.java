@@ -16,6 +16,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for customer user management.
+ * <p>
+ * Exposes endpoints for customer registration and login.
+ * Base path: {@code /api/customer}
+ * </p>
+ */
 @Tag(name = "Customer User APIs", description = "APIs for customer registration and login")
 @Slf4j
 @RestController
@@ -34,6 +41,12 @@ public class CustomerUserController {
             @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Registers a new customer account.
+     *
+     * @param request the registration payload with name, email, and password
+     * @return HTTP 201 with the created customer's profile in the response body
+     */
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
         log.info("Registering the customer user");
@@ -49,6 +62,12 @@ public class CustomerUserController {
             @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Authenticates a customer with email and password.
+     *
+     * @param request the login payload with email and password
+     * @return HTTP 200 with the authenticated customer's profile in the response body
+     */
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");

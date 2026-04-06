@@ -3,6 +3,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
 
+/**
+ * DTO for user registration requests.
+ * <p>
+ * Carries the input data required to register any type of user
+ * (ADMIN, STAFF, CUSTOMER, or DELIVERY_STAFF).
+ * </p>
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

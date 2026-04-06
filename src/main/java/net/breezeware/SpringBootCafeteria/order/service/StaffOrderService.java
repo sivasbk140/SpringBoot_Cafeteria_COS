@@ -2,15 +2,15 @@ package net.breezeware.SpringBootCafeteria.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.breezeware.SpringBootCafeteria.exception.AppException;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderDetailDto;
 import net.breezeware.SpringBootCafeteria.order.dto.OrderSummaryDetailDto;
 import net.breezeware.SpringBootCafeteria.order.entity.Order;
 import net.breezeware.SpringBootCafeteria.order.entity.OrderDeliveryMap;
 import net.breezeware.SpringBootCafeteria.order.enumeration.OrderStatus;
-import net.breezeware.SpringBootCafeteria.exception.InvalidStatusException;
-import net.breezeware.SpringBootCafeteria.exception.ResourceNotFoundException;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderDeliveryMapRepository;
 import net.breezeware.SpringBootCafeteria.order.repo.OrderRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +59,7 @@ public class StaffOrderService {
     public OrderDetailDto getOrderById(Long orderId) {
         log.info("Staff fetching order by id: {}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
         return mapToDetail(order);
     }
 
@@ -79,14 +79,14 @@ public class StaffOrderService {
         log.info("Staff updating order {} status to {}", orderId, newStatus);
 
         if (newStatus == OrderStatus.ORDER_CANCELLED) {
-            throw new InvalidStatusException("Use the cancel endpoint to cancel an order.");
+            throw new AppException("Use the cancel endpoint to cancel an order.", HttpStatus.BAD_REQUEST);
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (!order.getStatus().canTransitionTo(newStatus)) {
-            throw new InvalidStatusException("Invalid status transition: " + order.getStatus() + " -> " + newStatus);
+            throw new AppException("Invalid status transition: " + order.getStatus() + " -> " + newStatus, HttpStatus.BAD_REQUEST);
         }
 
         order.setStatus(newStatus);
@@ -97,9 +97,10 @@ public class StaffOrderService {
     public OrderDetailDto cancelOrder(Long orderId) {
         log.info("Staff force cancelling order: {}", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+
         if (!order.getStatus().isForceCancellable()) {
-            throw new InvalidStatusException("Order is already delivered or cancelled, cannot cancel.");
+            throw new AppException("Order is already delivered or cancelled, cannot cancel.", HttpStatus.BAD_REQUEST);
         }
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
@@ -111,14 +112,14 @@ public class StaffOrderService {
     public OrderDetailDto assignDeliveryStaff(Long orderId, Long staffId) {
         log.info("Admin assigning delivery staff {} to order {}", staffId, orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+                .orElseThrow(() -> new AppException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
 
         if (order.getStatus() != OrderStatus.ORDER_PREPARING) {
-            throw new InvalidStatusException("Order must be in ORDER_PREPARING status to assign delivery staff");
+            throw new AppException("Order must be in ORDER_PREPARING status to assign delivery staff", HttpStatus.BAD_REQUEST);
         }
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("No delivery details found for order: " + orderId));
+                .orElseThrow(() -> new AppException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND));
         deliveryMap.setDeliveryStaffId(staffId);
         orderDeliveryMapRepository.save(deliveryMap);
 

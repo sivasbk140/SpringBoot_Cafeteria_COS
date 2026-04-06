@@ -6,6 +6,16 @@ import lombok.*;
 
 import java.util.Date;
 
+/**
+ * JPA entity representing the delivery contact information for a delivery staff member.
+ * <p>
+ * Stores the email, phone number, and location associated with a user who has the
+ * {@link net.breezeware.SpringBootCafeteria.user.enumeration.Role#DELIVERY_STAFF} role.
+ * Timestamps are managed automatically via {@code @PrePersist} and {@code @PreUpdate}.
+ * </p>
+ *
+ * @see User
+ */
 @Entity
 @Table(name = "delivery_details")
 @Data

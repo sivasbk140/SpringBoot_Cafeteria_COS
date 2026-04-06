@@ -16,6 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.*;
 
+/**
+ * REST controller for delivery staff user management.
+ * <p>
+ * Exposes endpoints for delivery staff registration and login.
+ * Base path: {@code /api/deliveryStaff}
+ * </p>
+ */
 @Tag(name = "Delivery Staff User APIs", description = "APIs for delivery staff registration and login")
 @Slf4j
 @RestController
@@ -34,6 +41,12 @@ public class DeliveryStaffUserController {
             @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Registers a new delivery staff account.
+     *
+     * @param request the registration payload with name, email, and password
+     * @return HTTP 201 with the created delivery staff member's profile in the response body
+     */
     @PostMapping("/register")
     public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
         log.info("Registering the staff user");
@@ -49,6 +62,12 @@ public class DeliveryStaffUserController {
             @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
+    /**
+     * Authenticates a delivery staff member with email and password.
+     *
+     * @param request the login payload with email and password
+     * @return HTTP 200 with the authenticated delivery staff member's profile in the response body
+     */
     @PostMapping("/login")
     public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
         log.info("Logging in with mail and password");

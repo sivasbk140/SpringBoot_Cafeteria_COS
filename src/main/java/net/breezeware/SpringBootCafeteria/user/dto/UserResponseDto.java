@@ -5,6 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import net.breezeware.SpringBootCafeteria.user.enumeration.Role;
 
+/**
+ * DTO returned in responses after user registration or login.
+ * <p>
+ * Contains the user's public profile information — excludes sensitive
+ * fields such as password.
+ * </p>
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
