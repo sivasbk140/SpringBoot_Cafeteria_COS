@@ -1,0 +1,274 @@
+package net.breezeware.springbootcafeteria.order.service;
+
+import net.breezeware.springbootcafeteria.exception.AppCustomException;
+import net.breezeware.springbootcafeteria.food.entity.FoodItem;
+import net.breezeware.springbootcafeteria.food.dao.FoodItemRepository;
+import net.breezeware.springbootcafeteria.order.dto.CartItemDto;
+import net.breezeware.springbootcafeteria.order.dto.OrderDetailDto;
+import net.breezeware.springbootcafeteria.order.entity.Order;
+import net.breezeware.springbootcafeteria.order.enumeration.OrderStatus;
+import net.breezeware.springbootcafeteria.order.dao.OrderDeliveryMapRepository;
+import net.breezeware.springbootcafeteria.order.dao.OrderRepository;
+import net.breezeware.springbootcafeteria.user.entity.User;
+import net.breezeware.springbootcafeteria.user.dao.UserRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class CustomerOrderServiceTest {
+    @Mock
+    private OrderRepository orderRepository;
+    @Mock
+    private OrderDeliveryMapRepository orderDeliveryMapRepository;
+    @Mock
+    private UserRepository userRepository;
+
+   @Mock
+    private FoodItemRepository foodItemRepository;
+
+    @InjectMocks
+    private CustomerOrderService customerOrderService;
+
+
+
+    @Test
+    void  addToCart_shouldAddItemsToCart()
+    {
+
+
+
+        // Arrange
+        Long userId = 1L;
+        String foodName = "Pizza";
+
+        FoodItem foodItem = new FoodItem( "Pizza",250.0 ,10, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase(foodName))
+                .thenReturn(Optional.of(foodItem));
+
+        // Act
+        List<CartItemDto> result = customerOrderService.addToCart(userId, foodName, 2);
+
+        // Assert
+        assertEquals(1, result.size());
+
+        CartItemDto item = result.get(0);
+        assertEquals("Pizza", item.getFoodItemName());
+        assertEquals(2, item.getQuantity());
+        assertEquals(500.0, item.getTotalPrice());
+
+        verify(foodItemRepository).findByNameIgnoreCase(foodName);
+    }
+
+
+    @Test
+    void addToCart_NegativeCase_InsufficientStock()
+    {
+        Long userId = 1L;
+        String foodName = "Pizza";
+
+        FoodItem foodItem = new FoodItem( "Pizza",250.0 ,1, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase(foodName))
+                .thenReturn(Optional.of(foodItem));
+
+        // Act
+
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerOrderService.addToCart(1L,foodName,4));
+
+    //Assert
+      assertEquals("Insufficient stock for item: Pizza",exception.getMessage());
+
+        verify(foodItemRepository).findByNameIgnoreCase(foodName);
+    }
+
+
+
+    @Test
+    void viewCart_shouldReturnMultipleItems_whenMultipleItemsAdded() {
+
+        // Arrange
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+        FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza"))
+                .thenReturn(Optional.of(pizza));
+
+        when(foodItemRepository.findByNameIgnoreCase("Burger"))
+                .thenReturn(Optional.of(burger));
+
+        // Act
+        customerOrderService.addToCart(userId, "Pizza", 2);   // total = 400
+        customerOrderService.addToCart(userId, "Burger", 3);  // total = 450
+
+        List<CartItemDto> result = customerOrderService.viewCart(userId);
+
+
+        assertEquals(2, result.size());
+
+        // Validate Pizza
+        CartItemDto item1 = result.get(0);
+        CartItemDto item2 = result.get(1);
+
+        // Since order may vary, safer check:
+        boolean pizzaFound = result.stream().anyMatch(item ->
+                item.getFoodItemName().equalsIgnoreCase("Pizza") &&
+                        item.getQuantity() == 2 &&
+                        item.getTotalPrice() == 400.0
+        );
+
+        boolean burgerFound = result.stream().anyMatch(item ->
+                item.getFoodItemName().equalsIgnoreCase("Burger") &&
+                        item.getQuantity() == 3 &&
+                        item.getTotalPrice() == 450.0
+        );
+
+
+
+        verify(foodItemRepository).findByNameIgnoreCase("Pizza");
+        verify(foodItemRepository).findByNameIgnoreCase("Burger");
+    }
+
+    @Test
+    void viewCartShould_notReturnIfCartIsEmpty()
+    {
+        List<CartItemDto> result = customerOrderService.viewCart(99L);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void removeFromCart_shouldDecrementQuantity_whenQuantityIsPartial() {
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+        FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+        when(foodItemRepository.findByNameIgnoreCase("Burger")).thenReturn(Optional.of(burger));
+
+        customerOrderService.addToCart(userId, "Pizza", 3);   // qty=3, total=600
+        customerOrderService.addToCart(userId, "Burger", 3);  // qty=3, total=450
+
+        // Remove 1 Pizza — should decrement, not remove
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 1);
+
+        assertEquals(2, result.size());
+
+        CartItemDto pizzaItem = result.stream()
+                .filter(i -> i.getFoodItemName().equalsIgnoreCase("Pizza"))
+                .findFirst().orElseThrow();
+
+        assertEquals(2, pizzaItem.getQuantity());
+        assertEquals(400.0, pizzaItem.getTotalPrice());
+    }
+
+    @Test
+    void removeFromCart_shouldRemoveItem_whenQuantityReachesZero() {
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+        FoodItem burger = new FoodItem("Burger", 150.0, 10, "Non_Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+        when(foodItemRepository.findByNameIgnoreCase("Burger")).thenReturn(Optional.of(burger));
+
+        customerOrderService.addToCart(userId, "Pizza", 2);
+        customerOrderService.addToCart(userId, "Burger", 3);
+
+        // Remove all Pizza quantity
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 2);
+
+        assertEquals(1, result.size());
+        assertTrue(result.stream().noneMatch(i -> i.getFoodItemName().equalsIgnoreCase("Pizza")));
+    }
+
+    @Test
+    void removeFromCart_shouldRemoveItem_whenQuantityExceedsCartQuantity() {
+        Long userId = 1L;
+
+        FoodItem pizza = new FoodItem("Pizza", 200.0, 10, "Veg");
+
+        when(foodItemRepository.findByNameIgnoreCase("Pizza")).thenReturn(Optional.of(pizza));
+
+        customerOrderService.addToCart(userId, "Pizza", 2);
+
+        // Remove more than what's in cart — item should be fully removed
+        List<CartItemDto> result = customerOrderService.removeFromCart(userId, "Pizza", 5);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void removeFromCart_shouldThrowException_whenItemNotInCart() {
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                customerOrderService.removeFromCart(99L, "Pizza", 1));
+
+        assertEquals("Food item not found in cart: Pizza", exception.getMessage());
+    }
+
+
+
+    @Test
+    void getOrderDetail_shouldReturnOrder_whenUserOwnsOrder() {
+
+        // Arrange
+        Long orderId = 1L;
+        Long userId = 101L;
+
+        User user = new User();
+        user.setId(userId);
+
+        Order order = new Order();
+        order.setId(orderId);
+        order.setUser(user);
+        order.setStatus(OrderStatus.PLACED_ORDER);
+        order.setCreatedOn(new Date());
+
+        when(orderRepository.findById(orderId))
+                .thenReturn(Optional.of(order));
+
+        // Act
+        OrderDetailDto result =
+                customerOrderService.getOrderDetail(orderId, userId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(orderId, result.getOrderId());
+
+        verify(orderRepository).findById(orderId);
+    }
+
+    @Test
+    void getOrderDetail_shouldThrowWhenOrderNotFound()
+    {
+        Long orderId = 1L;
+        Long userId = 101L;
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+
+        assertThrows(AppCustomException.class, () ->
+                customerOrderService.getOrderDetail(orderId, userId));
+
+        verify(orderRepository).findById(orderId);
+    }
+
+}
+
