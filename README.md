@@ -80,11 +80,11 @@ http://localhost:8080/swagger-ui/index.html
 | Spring Boot       | 4.0.3     |
 | Spring Data JPA   | —         |
 | PostgreSQL        | Latest    |
-| Flyway            | —         |
-| Lombok            | —         |
+| Flyway            |           |
+| Lombok            |           |
 | SpringDoc OpenAPI | 3.0.2     |
-| Docker Compose    | —         |
-| Maven             | —         |
+| Docker Compose    |           |
+| Maven             |           |
 
 ---
 
@@ -273,6 +273,7 @@ PLACED_ORDER → ORDER_RECEIVED → ORDER_PREPARING → ASSIGNED_DELIVERY_STAFF 
 | V12     | Create order delivery map table      |
 | V13     | Update order status constraint       |
 | V14     | Add delivery_staff_id column         |
+| V15     | Drop availability map table          |
 
 ---
 
