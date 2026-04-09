@@ -1,6 +1,7 @@
 package net.breezeware.springbootcafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.breezeware.springbootcafeteria.exception.AppCustomException;
 import net.breezeware.springbootcafeteria.food.dto.CustomerFoodItemResponse;
 import net.breezeware.springbootcafeteria.food.dto.CustomerFoodMenuResponse;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @since 1.0
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,10 +48,12 @@ public class CustomerFoodService {
      * @implNote Uses MenuDay enum for filtering; only items with quantity &gt; 0 are included.
      */
     public List<CustomerFoodMenuResponse> getMenusForDay(MenuDay day) {
+        log.info("Customer fetching menus for day: {} in service layer", day);
         List<CustomerFoodMenuResponse> menuForDay = foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} menus for day: {}", menuForDay.size(), day);
         return menuForDay;
     }
 
@@ -63,10 +67,12 @@ public class CustomerFoodService {
      * @implNote Only menu items with quantity &gt; 0 are included in each menu response.
      */
     public List<CustomerFoodMenuResponse> getAllAvailableMenus() {
+        log.info("Customer fetching all available menus in service layer");
         List<CustomerFoodMenuResponse> availableMenu = foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} available menus", availableMenu.size());
         return availableMenu;
     }
 
@@ -80,10 +86,12 @@ public class CustomerFoodService {
      * @implNote Uses a repository query to fetch only items marked as available.
      */
     public List<CustomerFoodItemResponse> getAvailableFoodItems() {
+        log.info("Customer fetching available food items in service layer");
         List<CustomerFoodItemResponse> availableItems = foodItemRepository.findAvailableItems().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} available food items", availableItems.size());
         return availableItems;
     }
 
@@ -98,11 +106,13 @@ public class CustomerFoodService {
      * @apiNote Category matching depends on DB collation configuration.
      */
     public List<CustomerFoodItemResponse> getFoodItemsByCategory(String category) {
+        log.info("Customer fetching food items by category: {} in service layer", category);
         List<CustomerFoodItemResponse> itemByCat = foodItemRepository.findByCategory(category).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} food items for category: {}", itemByCat.size(), category);
         return itemByCat;
     }
 
@@ -117,11 +127,13 @@ public class CustomerFoodService {
      * @implNote Uses case-insensitive name matching and filters out out-of-stock items.
      */
     public List<CustomerFoodItemResponse> searchFoodItems(String keyword) {
+        log.info("Customer searching food items with keyword: {} in service layer", keyword);
         List<CustomerFoodItemResponse> searchItems = foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
                 .filter(item -> item.getQuantity() > 0)
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} food items for keyword: {}", searchItems.size(), keyword);
         return searchItems;
     }
 
@@ -134,13 +146,14 @@ public class CustomerFoodService {
      * @implNote Internal helper method for DTO conversion.
      */
     private CustomerFoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
+        log.debug("Mapping food item to response: {}", foodItem.getName());
         return new CustomerFoodItemResponse(
                 foodItem.getName(),
                 foodItem.getPrice(),
                 foodItem.getQuantity(),
                 foodItem.getCategory(),
                 foodItem.getDescription(),
-                foodItem.isAvailable()
+                foodItem.getQuantity() > 0
         );
     }
 
@@ -153,6 +166,7 @@ public class CustomerFoodService {
      * @implNote Filters out menu items with quantity &lt;= 0 during mapping.
      */
     private CustomerFoodMenuResponse mapMenuToResponse(FoodMenu menu) {
+        log.debug("Mapping food menu to response: {}", menu.getId());
         List<CustomerFoodItemResponse> itemResponses = menu.getMenuItems().stream()
                 .filter(mapping -> mapping.getFoodItem().getQuantity() > 0)
                 .map(mapping -> new CustomerFoodItemResponse(

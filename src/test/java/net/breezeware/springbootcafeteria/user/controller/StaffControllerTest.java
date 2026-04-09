@@ -1,8 +1,8 @@
 package net.breezeware.springbootcafeteria.user.controller;
 
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.service.StaffUserService;
 import org.junit.jupiter.api.Test;
@@ -31,17 +31,17 @@ public class StaffControllerTest {
     void register_success() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
 
-        UserResponseDto responseDto =
-                new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.STAFF);
+        UserResponse responseDto =
+                new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.STAFF);
 
         when(staffUserService.registerUser(requestDto))
                 .thenReturn(responseDto);
 
         // Act
-        ResponseEntity<UserResponseDto> response =
+        ResponseEntity<UserResponse> response =
                 staffUserController.registerUser(requestDto);
 
         // Assert
@@ -51,8 +51,8 @@ public class StaffControllerTest {
 
     @Test
     public void register_failed() {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
         when(staffUserService.registerUser(requestDto))
                 .thenThrow(new RuntimeException("Email already exist"));
 
@@ -66,16 +66,16 @@ public class StaffControllerTest {
 
     @Test
     public void login_successful() {
-        UserLoginRequestDto loginDto =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest loginDto =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
-        UserResponseDto responseDto =
-                new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.STAFF);
+        UserResponse responseDto =
+                new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.STAFF);
 
         when(staffUserService.login(loginDto))
                 .thenReturn(responseDto);
 
-        ResponseEntity<UserResponseDto> response =
+        ResponseEntity<UserResponse> response =
                 staffUserController.login(loginDto);
 
         // Assert
@@ -90,8 +90,8 @@ public class StaffControllerTest {
 
     @Test
     public void login_failed() {
-        UserLoginRequestDto loginDto =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest loginDto =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         when(staffUserService.login(loginDto))
                 .thenThrow(new RuntimeException("Login Failed password or mail is wrong"));

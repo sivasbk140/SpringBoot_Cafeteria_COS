@@ -1,8 +1,8 @@
 package net.breezeware.springbootcafeteria.user.service;
 
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.entity.User;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.dao.UserRepository;
@@ -33,8 +33,8 @@ public class StaffUserServiceTest {
     void register_success() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
 
         User userEntity =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
@@ -43,7 +43,7 @@ public class StaffUserServiceTest {
                 .thenReturn(userEntity);
 
         // Act
-        UserResponseDto result = staffUserService.registerUser(requestDto);
+        UserResponse result = staffUserService.registerUser(requestDto);
 
         // Assert
         assertNotNull(result);
@@ -54,8 +54,8 @@ public class StaffUserServiceTest {
     void register_failed_emailAlreadyExists() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
 
         when(userRepository.save(any(User.class)))
                 .thenThrow(new RuntimeException("Email Already Registered"));
@@ -73,8 +73,8 @@ public class StaffUserServiceTest {
     void login_success() {
 
         // Arrange
-        UserLoginRequestDto request =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest request =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         User user =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.STAFF);
@@ -83,7 +83,7 @@ public class StaffUserServiceTest {
                 .thenReturn(Optional.of(user));
 
         // Act
-        UserResponseDto response = staffUserService.login(request);
+        UserResponse response = staffUserService.login(request);
 
         // Assert
         assertNotNull(response);
@@ -97,8 +97,8 @@ public class StaffUserServiceTest {
     void login_failed_user_not_found() {
 
         // Arrange
-        UserLoginRequestDto request =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest request =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         when(userRepository.findByEmail("sikar@gmail.com"))
                 .thenReturn(Optional.empty());

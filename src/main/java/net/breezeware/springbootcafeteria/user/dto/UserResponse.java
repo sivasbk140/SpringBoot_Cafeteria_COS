@@ -16,7 +16,7 @@ import net.breezeware.springbootcafeteria.user.enumeration.Role;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponseDto  {
+public class UserResponse {
 
     /** Unique identifier of the user. */
     @Schema(description = "id of the user",example = "1")

@@ -1,7 +1,7 @@
 package net.breezeware.springbootcafeteria.food.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,9 +14,11 @@ import net.breezeware.springbootcafeteria.food.dto.AdminFoodMenuResponse;
 import net.breezeware.springbootcafeteria.food.dto.FoodItemRequest;
 import net.breezeware.springbootcafeteria.food.dto.FoodItemResponse;
 import net.breezeware.springbootcafeteria.food.dto.FoodMenuRequest;
+import net.breezeware.springbootcafeteria.food.entity.FoodItem;
 import net.breezeware.springbootcafeteria.food.enumeration.MenuDay;
 import net.breezeware.springbootcafeteria.food.service.AdminFoodService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,20 +36,62 @@ public class AdminFoodController {
 
 
     @Operation(summary = "Create food item", description = "Adds a new food item to the system")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Food item created",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = FoodItemResponse.class),
-                            examples = @ExampleObject(
-                                    value = "{ \"id\":1, \"name\":\"Dosa\", \"price\":50, \"category\":\"BREAKFAST\" }"
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Food item creation details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = FoodItemRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Breakfast Item",
+                                    value = """
+                                        {
+                                          "name": "Dosa",
+                                          "price": 50.0,
+                                          "description": "Crispy south indian dosa",
+                                          "quantity": 100,
+                                          "category": "BREAKFAST"
+                                        }
+                                        """
+                            ),
+                            @ExampleObject(
+                                    name = "Snack Item",
+                                    value = """
+                                        {
+                                          "name": "Chicken Burger",
+                                          "price": 120.0,
+                                          "description": "Grilled chicken with lettuce and sauce",
+                                          "quantity": 50,
+                                          "category": "SNACK"
+                                        }
+                                        """
                             )
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    }
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Food item created",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "name": "Dosa",
+                          "price": 50.0,
+                          "quantity": 100,
+                          "category": "BREAKFAST",
+                          "description": "Crispy south indian dosa",
+                          "isAvailable": true,
+                          "createdOn": "2024-01-01T00:00:00.000Z",
+                          "updatedOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "Invalid input",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 400,
+                          "message": "Invalid input"
+                        }
+                    """)))
     })
     @PostMapping("/items")
     public ResponseEntity<FoodItemResponse> createFoodItem(
@@ -59,18 +103,26 @@ public class AdminFoodController {
 
     @Operation(summary = "Get all food items", description = "Fetches all available food items")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food items retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)),
-                            examples = @ExampleObject(
-                                    value = "[{\"id\":1,\"name\":\"Dosa\",\"price\":50}]"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food items retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 1,
+                            "name": "Dosa",
+                            "price": 50.0,
+                            "quantity": 100,
+                            "category": "BREAKFAST",
+                            "description": "Crispy south indian dosa",
+                            "isAvailable": true
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No Items Found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                     []
+                        }
+                    """)))
     })
     @GetMapping("/items")
     public ResponseEntity<List<FoodItemResponse>> getAllFoodItems() {
@@ -79,21 +131,30 @@ public class AdminFoodController {
     }
 
 
-    @Operation(summary = "Get food item by ID", description = "Fetches a food item for the given ID")
+    @Operation(summary = "Get food item by ID", description = "Fetches a food item for the given ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food item to retrieve")})
+
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food item retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = FoodItemResponse.class),
-                            examples = @ExampleObject(
-                                    value = "{\"id\":1,\"name\":\"Dosa\",\"price\":50}"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Food item not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food item retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "name": "Dosa",
+                          "price": 50.0,
+                          "quantity": 100,
+                          "category": "BREAKFAST",
+                          "description": "Crispy south indian dosa",
+                          "isAvailable": true
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Food item not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Food item with ID not found"]
+                        }
+                    """)))
     })
     @GetMapping("/items/{id}")
     public ResponseEntity<FoodItemResponse> getFoodItemById(@PathVariable Long id) {
@@ -102,23 +163,59 @@ public class AdminFoodController {
     }
 
 
+    @Operation(summary = "Update food item", description = "Updates an existing food item by ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food item to update")})
 
-    @Operation(summary = "Update food item", description = "Updates an existing food item by ID")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food item updated",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = FoodItemResponse.class),
-                            examples = @ExampleObject(
-                                    value = "{\"id\":1,\"name\":\"Dosa\",\"price\":60}"
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Food item update details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = FoodItemRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Update price and quantity",
+                                    value = """
+                                        {
+                                          "name": "Dosa",
+                                          "price": 60.0,
+                                          "description": "Crispy south indian dosa with chutney",
+                                          "quantity": 80,
+                                          "category": "BREAKFAST"
+                                        }
+                                        """
                             )
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Food item not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    }
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Food item updated successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "name": "Dosa",
+                          "price": 60.0,
+                          "quantity": 80,
+                          "category": "BREAKFAST",
+                          "description": "Crispy south indian dosa with chutney",
+                          "isAvailable": true
+                        }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "Invalid input",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 400,
+                          "message": "Invalid input"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Food item not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Food item with ID not found"]
+                        }
+                    """)))
     })
     @PutMapping("/items/{id}")
     public ResponseEntity<FoodItemResponse> updateFoodItem(
@@ -130,11 +227,28 @@ public class AdminFoodController {
 
 
 
-    @Operation(summary = "Delete food item", description = "Deletes a food item by ID")
+
+
+    @Operation(summary = "Delete food item", description = "Deletes a food item by ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food item to delete")})
+
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Food item deleted successfully", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Food item not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "204", description = "Food item deleted successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 204
+                          "message": "Item Deleted successfully",
+                          "details": ["Food item with ID deleted "]
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Food item not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Food item with ID not found"]
+                        }
+                    """)))
     })
     @DeleteMapping("/items/{id}")
     public ResponseEntity<Void> deleteFoodItem(@PathVariable Long id) {
@@ -143,21 +257,26 @@ public class AdminFoodController {
     }
 
 
+    @Operation(summary = "Get food items by category", description = "Fetches all food items for a given category",
+            parameters = {@Parameter(name = "category", description = "Category to filter food items (e.g. BREAKFAST, LUNCH, SNACK)")})
 
-    @Operation(summary = "Get food items by category", description = "Fetches all food items for a given category")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food items fetched",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)),
-                            examples = @ExampleObject(
-                                    value = "[{\"id\":1,\"name\":\"Dosa\",\"price\":50}]"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food items fetched",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 1,
+                            "name": "Dosa",
+                            "price": 50.0,
+                            "quantity": 100,
+                            "category": "BREAKFAST"
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No items found for category",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                       []
+                    """)))
     })
     @GetMapping("/items/category/{category}")
     public ResponseEntity<List<FoodItemResponse>> getFoodItemsByCategory(
@@ -167,21 +286,27 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Get low stock food items", description = "Fetches food items with quantity at or below the threshold")
+    @Operation(summary = "Get low stock food items", description = "Fetches food items with quantity at or below the threshold",
+            parameters = {@Parameter(name = "threshold", description = "Stock threshold (default 10)")})
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Low stock food items fetched",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)),
-                            examples = @ExampleObject(
-                                    value = "[{\"id\":1,\"name\":\"Dosa\",\"price\":50,\"quantity\":3}]"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Low stock food items fetched",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 1,
+                            "name": "Dosa",
+                            "price": 50.0,
+                            "quantity": 3,
+                            "category": "BREAKFAST"
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No items found under the threshold",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(
+                            oneOf = {FoodItem[].class},
+                            example = """
+                                           []
+                                           """)))
     })
     @GetMapping("/items/low-stock")
     public ResponseEntity<List<FoodItemResponse>> getLowStockItems(
@@ -191,21 +316,25 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Search food items", description = "Searches food items by name keyword")
+    @Operation(summary = "Search food items", description = "Searches food items by name keyword",
+            parameters = {@Parameter(name = "keyword", description = "Search keyword to match against food item names")})
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Search results returned",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = FoodItemResponse.class)),
-                            examples = @ExampleObject(
-                                    value = "[{\"id\":2,\"name\":\"Burger\",\"price\":80}]"
-                            )
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Search results returned",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 2,
+                            "name": "Chicken Burger",
+                            "price": 120.0,
+                            "quantity": 50,
+                            "category": "SNACK"
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No Food Items Found For The Key",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        []
+                    """)))
     })
     @GetMapping("/items/search")
     public ResponseEntity<List<FoodItemResponse>> searchFoodItems(
@@ -215,20 +344,63 @@ public class AdminFoodController {
     }
 
 
-
-
     @Operation(summary = "Create food menu", description = "Creates a new food menu with items and availability days")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Food menu creation details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = FoodMenuRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Monday Breakfast Menu",
+                                    value = """
+                                        {
+                                          "category": "BREAKFAST",
+                                          "menuDay": "MONDAY",
+                                          "foodItemIds": [1, 2, 3]
+                                        }
+                                        """
+                            ),
+                            @ExampleObject(
+                                    name = "Tuesday Lunch Menu",
+                                    value = """
+                                        {
+                                          "category": "LUNCH",
+                                          "menuDay": "TUESDAY",
+                                          "foodItemIds": [4, 5]
+                                        }
+                                        """
+                            )
+                    }
+            )
+    )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Food menu created",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Food menu created",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "category": "BREAKFAST",
+                          "menuDay": "MONDAY",
+                          "items": [
+                            {
+                              "id": 1,
+                              "foodItemId": 1,
+                              "foodItemName": "Dosa",
+                              "foodItemPrice": 50.0,
+                              "isAvailable": true
+                            }
+                          ],
+                          "createdOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "Invalid input",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 400,
+                          "message": "Invalid input"
+                        }
+                    """)))
     })
     @PostMapping("/menus")
     public ResponseEntity<AdminFoodMenuResponse> createFoodMenu(
@@ -238,18 +410,26 @@ public class AdminFoodController {
     }
 
 
-
     @Operation(summary = "Get all food menus", description = "Fetches all food menus")
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food menus retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = AdminFoodMenuResponse.class))
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food menus retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 1,
+                            "category": "BREAKFAST",
+                            "menuDay": "MONDAY",
+                            "items": [],
+                            "createdOn": "2024-01-01T00:00:00.000Z"
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No menus found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          []
+                        }
+                    """)))
     })
     @GetMapping("/menus")
     public ResponseEntity<List<AdminFoodMenuResponse>> getAllFoodMenus() {
@@ -258,18 +438,35 @@ public class AdminFoodController {
     }
 
 
-    @Operation(summary = "Get food menu by ID", description = "Fetches a food menu for the given ID")
+    @Operation(summary = "Get food menu by ID", description = "Fetches a food menu for the given ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food menu to retrieve")})
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food menu retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food menu retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "category": "BREAKFAST",
+                          "menuDay": "MONDAY",
+                          "items": [
+                            {
+                              "id": 1,
+                              "foodItemId": 1,
+                              "foodItemName": "Dosa",
+                              "foodItemPrice": 50.0,
+                              "isAvailable": true
+                            }
+                          ],
+                          "createdOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Menu not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Menu with ID not found"]
+                        }
+                    """)))
     })
     @GetMapping("/menus/{id}")
     public ResponseEntity<AdminFoodMenuResponse> getFoodMenuById(@PathVariable Long id) {
@@ -278,18 +475,27 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Get food menus by day", description = "Fetches all menus (BREAKFAST, LUNCH, DINNER) for the given day")
+    @Operation(summary = "Get food menus by day", description = "Fetches all menus (BREAKFAST, LUNCH, DINNER) for the given day",
+            parameters = {@Parameter(name = "day", description = "Day of the week (e.g. MONDAY, TUESDAY)")})
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food menus retrieved",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = AdminFoodMenuResponse.class))
-                    )
-            ),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food menus retrieved",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        [
+                          {
+                            "id": 1,
+                            "category": "BREAKFAST",
+                            "menuDay": "MONDAY",
+                            "items": [],
+                            "createdOn": "2024-01-01T00:00:00.000Z"
+                          }
+                        ]
+                    """))),
+            @ApiResponse(responseCode = "200", description = "No Menus Found For Day",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                      []
+                        }
+                    """)))
     })
     @GetMapping("/menus/day/{day}")
     public ResponseEntity<List<AdminFoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
@@ -298,19 +504,47 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Update food menu", description = "Updates an existing food menu by ID")
+    @Operation(summary = "Update food menu", description = "Updates an existing food menu by ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food menu to update")})
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Food menu update details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = FoodMenuRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "Update menu",
+                                    value = """
+                                        {
+                                          "category": "LUNCH",
+                                          "menuDay": "WEDNESDAY",
+                                          "foodItemIds": [2, 4, 5]
+                                        }
+                                        """
+                            )
+                    }
+            )
+    )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food menu updated",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food menu updated",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "category": "LUNCH",
+                          "menuDay": "WEDNESDAY",
+                          "items": [],
+                          "createdOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Menu not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Menu with ID not found"]
+                        }
+                    """)))
     })
     @PutMapping("/menus/{id}")
     public ResponseEntity<AdminFoodMenuResponse> updateFoodMenu(
@@ -321,12 +555,19 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Delete food menu", description = "Deletes a food menu by ID")
+    @Operation(summary = "Delete food menu", description = "Deletes a food menu by ID",
+            parameters = {@Parameter(name = "id", description = "ID of the food menu to delete")})
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Food menu deleted successfully", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "204", description = "Food menu deleted successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Menu not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Menu with ID not found"]
+                        }
+                    """)))
     })
     @DeleteMapping("/menus/{id}")
     public ResponseEntity<Void> deleteFoodMenu(@PathVariable Long id) {
@@ -335,19 +576,38 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Add food item to menu", description = "Adds an existing food item to a menu")
+    @Operation(summary = "Add food item to menu", description = "Adds an existing food item to a menu",
+            parameters = {
+                    @Parameter(name = "menuId", description = "ID of the menu"),
+                    @Parameter(name = "foodItemId", description = "ID of the food item to add")
+            })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food item added to menu",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Menu or food item not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food item added to menu",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "category": "BREAKFAST",
+                          "menuDay": "MONDAY",
+                          "items": [
+                            {
+                              "id": 1,
+                              "foodItemId": 1,
+                              "foodItemName": "Dosa",
+                              "foodItemPrice": 50.0,
+                              "isAvailable": true
+                            }
+                          ],
+                          "createdOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Menu or food item not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Menu or food item not found"]
+                        }
+                    """)))
     })
     @PostMapping("/menus/{menuId}/items/{foodItemId}")
     public ResponseEntity<AdminFoodMenuResponse> addFoodItemToMenu(
@@ -358,19 +618,30 @@ public class AdminFoodController {
     }
 
 
-
-    @Operation(summary = "Remove food item from menu", description = "Removes a food item from a menu")
+    @Operation(summary = "Remove food item from menu", description = "Removes a food item from a menu",
+            parameters = {
+                    @Parameter(name = "menuId", description = "ID of the menu"),
+                    @Parameter(name = "foodItemId", description = "ID of the food item to remove")
+            })
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Food item removed from menu",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AdminFoodMenuResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Menu not found", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Food item removed from menu",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "id": 1,
+                          "category": "BREAKFAST",
+                          "menuDay": "MONDAY",
+                          "items": [],
+                          "createdOn": "2024-01-01T00:00:00.000Z"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "404", description = "Menu not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 404,
+                          "message": "NOT_FOUND",
+                          "details": ["Menu not found"]
+                        }
+                    """)))
     })
     @DeleteMapping("/menus/{menuId}/items/{foodItemId}")
     public ResponseEntity<AdminFoodMenuResponse> removeFoodItemFromMenu(
@@ -379,7 +650,4 @@ public class AdminFoodController {
         AdminFoodMenuResponse updated = adminFoodService.removeFoodItemFromMenu(menuId, foodItemId);
         return ResponseEntity.ok(updated);
     }
-
-
-
 }

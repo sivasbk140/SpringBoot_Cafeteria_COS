@@ -1,6 +1,7 @@
 package net.breezeware.springbootcafeteria.food.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.breezeware.springbootcafeteria.exception.AppCustomException;
 import net.breezeware.springbootcafeteria.food.dto.*;
 import net.breezeware.springbootcafeteria.food.entity.FoodItem;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @since 1.0
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,6 +48,7 @@ public class AdminFoodService {
      * @implSpec A new FoodItem entity is created and persisted.
      */
     public FoodItemResponse createFoodItem(FoodItemRequest request) {
+        log.info("Creating food item in service layer");
         FoodItem foodItem = new FoodItem(
                 request.getName(),
                 request.getPrice(),
@@ -55,6 +58,7 @@ public class AdminFoodService {
         );
 
         FoodItem saved = foodItemRepository.save(foodItem);
+        log.info("Food item created successfully with name: {}", saved.getName());
         return mapFoodItemToResponse(saved);
     }
 
@@ -69,8 +73,11 @@ public class AdminFoodService {
      * @apiNote Returns HTTP 404 if the item does not exist.
      */
     public FoodItemResponse getFoodItemById(Long id) {
+        log.info("Fetching food item by id in service layer");
         FoodItem foodItem = foodItemRepository.findById(id)
-                .orElseThrow(() -> new AppCustomException("Food item not found with id: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Food item not found for id: {}", id);
+                    return new AppCustomException("Food item not found with id: " + id, HttpStatus.NOT_FOUND); });
+        log.info("Food item found with id: {}", id);
         return mapFoodItemToResponse(foodItem);
     }
 
@@ -84,10 +91,12 @@ public class AdminFoodService {
      * @implNote Uses stream mapping to convert entities to DTOs.
      */
     public List<FoodItemResponse> getAllFoodItems() {
+        log.info("Fetching all food items in service layer");
         List<FoodItemResponse> items = foodItemRepository.findAll().stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
+        log.info("Returning {} food items", items.size());
         return items;
     }
 
@@ -100,9 +109,12 @@ public class AdminFoodService {
      * @apiNote Category matching is case-sensitive depending on DB configuration.
      */
     public List<FoodItemResponse> getFoodItemsByCategory(String category) {
-        return foodItemRepository.findByCategory(category).stream()
+        log.info("Fetching food items by category: {}", category);
+        List<FoodItemResponse> items = foodItemRepository.findByCategory(category).stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
+        log.info("Returning {} food items for category: {}", items.size(), category);
+        return items;
     }
 
     /**
@@ -117,8 +129,10 @@ public class AdminFoodService {
      * @implNote Supports partial updates (only non-null fields are updated).
      */
     public FoodItemResponse updateFoodItem(Long id, FoodItemRequest request) {
+        log.info("Updating food item with id: {} in service layer", id);
         FoodItem foodItem = foodItemRepository.findById(id)
-                .orElseThrow(() -> new AppCustomException("Food item not found with id: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Food item not found for id: {}", id);
+                    return new AppCustomException("Food item not found with id: " + id, HttpStatus.NOT_FOUND); });
 
         if (request.getName() != null) foodItem.setName(request.getName());
         if (request.getPrice() != null) foodItem.setPrice(request.getPrice());
@@ -127,6 +141,7 @@ public class AdminFoodService {
         if (request.getDescription() != null) foodItem.setDescription(request.getDescription());
 
         FoodItem updated = foodItemRepository.save(foodItem);
+        log.info("Food item updated successfully with id: {}", id);
         return mapFoodItemToResponse(updated);
     }
 
@@ -140,10 +155,13 @@ public class AdminFoodService {
      * @apiNote This operation is irreversible.
      */
     public void deleteFoodItem(Long id) {
+        log.info("Deleting food item with id: {} in service layer", id);
         if (!foodItemRepository.existsById(id)) {
+            log.error("Food item not found for id: {}", id);
             throw new AppCustomException("Food item not found with id: " + id, HttpStatus.NOT_FOUND);
         }
         foodItemRepository.deleteById(id);
+        log.info("Food item deleted successfully with id: {}", id);
     }
 
     /**
@@ -157,17 +175,20 @@ public class AdminFoodService {
      * @implSpec Each food item is mapped using FoodMenuItemMap entity.
      */
     public AdminFoodMenuResponse createFoodMenu(FoodMenuRequest request) {
+        log.info("Creating food menu in service layer");
         FoodMenu menu = new FoodMenu(request.getCategory(), request.getMenuDay());
 
         if (request.getFoodItemIds() != null && !request.getFoodItemIds().isEmpty()) {
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                        .orElseThrow(() -> new AppCustomException("Food item not found: " + foodItemId, HttpStatus.NOT_FOUND));
-                menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
+                        .orElseThrow(() -> { log.error("Food item not found for id: {}", foodItemId);
+                            return new AppCustomException("Food item not found: " + foodItemId, HttpStatus.NOT_FOUND); });
+                menu.getMenuItems().add(new FoodMenuItemMap(menu, foodItem));
             }
         }
 
         FoodMenu saved = foodMenuRepository.save(menu);
+        log.info("Food menu created successfully with id: {}", saved.getId());
         return mapMenuToResponse(saved);
     }
 
@@ -180,8 +201,11 @@ public class AdminFoodService {
      * @throws AppCustomException if menu is not found
      */
     public AdminFoodMenuResponse getFoodMenuById(Long id) {
+        log.info("Fetching food menu by id in service layer");
         FoodMenu menu = foodMenuRepository.findById(id)
-                .orElseThrow(() -> new AppCustomException("Menu not found with id: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Menu not found for id: {}", id);
+                    return new AppCustomException("Menu not found with id: " + id, HttpStatus.NOT_FOUND); });
+        log.info("Menu found with id: {}", id);
         return mapMenuToResponse(menu);
     }
 
@@ -193,14 +217,17 @@ public class AdminFoodService {
      * @throws AppCustomException if no menus exist
      */
     public List<AdminFoodMenuResponse> getAllFoodMenus() {
+        log.info("Fetching all food menus in service layer");
         List<AdminFoodMenuResponse> menus = foodMenuRepository.findAll().stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
 
         if (menus.isEmpty()) {
+            log.error("No menus found in the system");
             throw new AppCustomException("No menus found in the system", HttpStatus.NOT_FOUND);
         }
 
+        log.info("Returning {} menus", menus.size());
         return menus;
     }
 
@@ -215,14 +242,17 @@ public class AdminFoodService {
      * @implNote Uses MenuDay enum for filtering.
      */
     public List<AdminFoodMenuResponse> getMenusForDay(MenuDay day) {
+        log.info("Fetching menus for day: {} in service layer", day);
         List<AdminFoodMenuResponse> menuForDays = foodMenuRepository.findByMenuDay(day).stream()
                 .map(this::mapMenuToResponse)
                 .collect(Collectors.toList());
 
         if (menuForDays.isEmpty()) {
+            log.error("No menu found for the day: {}", day);
             throw new AppCustomException("No menu found for the day: " + day, HttpStatus.NOT_FOUND);
         }
 
+        log.info("Returning {} menus for day: {}", menuForDays.size(), day);
         return menuForDays;
     }
 
@@ -238,8 +268,10 @@ public class AdminFoodService {
      * @implSpec Existing menu items are cleared and replaced if new IDs are provided.
      */
     public AdminFoodMenuResponse updateFoodMenu(Long id, FoodMenuRequest request) {
+        log.info("Updating food menu with id: {} in service layer", id);
         FoodMenu menu = foodMenuRepository.findById(id)
-                .orElseThrow(() -> new AppCustomException("Menu not found with id: " + id, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Menu not found for id: {}", id);
+                    return new AppCustomException("Menu not found with id: " + id, HttpStatus.NOT_FOUND); });
 
         if (request.getCategory() != null) menu.setCategory(request.getCategory());
         if (request.getMenuDay() != null) menu.setMenuDay(request.getMenuDay());
@@ -248,12 +280,14 @@ public class AdminFoodService {
             menu.getMenuItems().clear();
             for (Long foodItemId : request.getFoodItemIds()) {
                 FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                        .orElseThrow(() -> new AppCustomException("Food item not found: " + foodItemId, HttpStatus.NOT_FOUND));
-                menu.addMenuItem(new FoodMenuItemMap(menu, foodItem));
+                        .orElseThrow(() -> { log.error("Food item not found for id: {}", foodItemId);
+                            return new AppCustomException("Food item not found: " + foodItemId, HttpStatus.NOT_FOUND); });
+                menu.getMenuItems().add(new FoodMenuItemMap(menu, foodItem));
             }
         }
 
         FoodMenu updated = foodMenuRepository.save(menu);
+        log.info("Food menu updated successfully with id: {}", id);
         return mapMenuToResponse(updated);
     }
 
@@ -265,10 +299,13 @@ public class AdminFoodService {
      * @throws AppCustomException if menu not found
      */
     public void deleteFoodMenu(Long id) {
+        log.info("Deleting food menu with id: {} in service layer", id);
         if (!foodMenuRepository.existsById(id)) {
+            log.error("Menu not found for id: {}", id);
             throw new AppCustomException("Menu not found with id: " + id, HttpStatus.NOT_FOUND);
         }
         foodMenuRepository.deleteById(id);
+        log.info("Food menu deleted successfully with id: {}", id);
     }
 
     /**
@@ -283,16 +320,20 @@ public class AdminFoodService {
      * @implNote Creates a new FoodMenuItemMap entry.
      */
     public AdminFoodMenuResponse addFoodItemToMenu(Long menuId, Long foodItemId) {
+        log.info("Adding food item {} to menu {} in service layer", foodItemId, menuId);
         FoodMenu menu = foodMenuRepository.findById(menuId)
-                .orElseThrow(() -> new AppCustomException("Menu not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Menu not found for id: {}", menuId);
+                    return new AppCustomException("Menu not found", HttpStatus.NOT_FOUND); });
 
         FoodItem foodItem = foodItemRepository.findById(foodItemId)
-                .orElseThrow(() -> new AppCustomException("Food item not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Food item not found for id: {}", foodItemId);
+                    return new AppCustomException("Food item not found", HttpStatus.NOT_FOUND); });
 
         FoodMenuItemMap mapping = new FoodMenuItemMap(menu, foodItem);
-        menu.addMenuItem(mapping);
+        menu.getMenuItems().add(mapping);
 
         FoodMenu updated = foodMenuRepository.save(menu);
+        log.info("Food item {} added to menu {} successfully", foodItemId, menuId);
         return mapMenuToResponse(updated);
     }
 
@@ -308,12 +349,15 @@ public class AdminFoodService {
      * @implSpec Removal is performed using predicate filtering.
      */
     public AdminFoodMenuResponse removeFoodItemFromMenu(Long menuId, Long foodItemId) {
+        log.info("Removing food item {} from menu {} in service layer", foodItemId, menuId);
         FoodMenu menu = foodMenuRepository.findById(menuId)
-                .orElseThrow(() -> new AppCustomException("Menu not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Menu not found for id: {}", menuId);
+                    return new AppCustomException("Menu not found", HttpStatus.NOT_FOUND); });
 
         menu.getMenuItems().removeIf(item -> item.getFoodItem().getId().equals(foodItemId));
 
         FoodMenu updated = foodMenuRepository.save(menu);
+        log.info("Food item {} removed from menu {} successfully", foodItemId, menuId);
         return mapMenuToResponse(updated);
     }
 
@@ -326,13 +370,16 @@ public class AdminFoodService {
      * @throws AppCustomException if no items found under threshold
      */
     public List<FoodItemResponse> getLowStockItems(int threshold) {
+        log.info("Fetching low stock items with threshold: {} in service layer", threshold);
         List<FoodItemResponse> lowStock = foodItemRepository.findLowStock(threshold).stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
         if (lowStock.isEmpty()) {
+            log.error("No low stock items found under the threshold: {}", threshold);
             throw new AppCustomException("No low stock items found under the threshold: " + threshold, HttpStatus.NOT_FOUND);
         }
+        log.info("Returning {} low stock items", lowStock.size());
         return lowStock;
     }
 
@@ -347,13 +394,16 @@ public class AdminFoodService {
      * @implNote Uses case-insensitive search.
      */
     public List<FoodItemResponse> searchFoodItems(String keyword) {
+        log.info("Searching food items with keyword: {} in service layer", keyword);
         List<FoodItemResponse> searchedItems = foodItemRepository.findByNameContainingIgnoreCase(keyword).stream()
                 .map(this::mapFoodItemToResponse)
                 .collect(Collectors.toList());
 
         if (searchedItems.isEmpty()) {
+            log.error("No items found for the keyword: {}", keyword);
             throw new AppCustomException("No items found for the keyword: " + keyword, HttpStatus.NOT_FOUND);
         }
+        log.info("Returning {} items for keyword: {}", searchedItems.size(), keyword);
         return searchedItems;
     }
 
@@ -366,6 +416,7 @@ public class AdminFoodService {
      * @implNote Internal helper method for DTO conversion.
      */
     private FoodItemResponse mapFoodItemToResponse(FoodItem foodItem) {
+        log.debug("Mapping food item to response: {}", foodItem.getId());
         return new FoodItemResponse(
                 foodItem.getId(),
                 foodItem.getName(),
@@ -373,7 +424,7 @@ public class AdminFoodService {
                 foodItem.getQuantity(),
                 foodItem.getCategory(),
                 foodItem.getDescription(),
-                foodItem.isAvailable(),
+                foodItem.getQuantity() > 0,
                 foodItem.getCreatedOn(),
                 foodItem.getUpdatedOn()
         );
@@ -388,6 +439,7 @@ public class AdminFoodService {
      * @implNote Includes nested mapping of menu items.
      */
     private AdminFoodMenuResponse mapMenuToResponse(FoodMenu menu) {
+        log.debug("Mapping food menu to response: {}", menu.getId());
         List<FoodMenuItemMapResponse> itemResponses = menu.getMenuItems().stream()
                 .map(mapping -> new FoodMenuItemMapResponse(
                         mapping.getId(),

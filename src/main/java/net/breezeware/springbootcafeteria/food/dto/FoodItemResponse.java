@@ -3,7 +3,7 @@ package net.breezeware.springbootcafeteria.food.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.util.Date;
+import java.time.Instant;
 
 /**
  * DTO representing the response data for a food item (admin view).
@@ -48,9 +48,9 @@ public class FoodItemResponse {
 
     /** Timestamp when the food item record was created. */
     @Schema(description = "Date when the food item was created", example = "2024-01-01T00:00:00.000+00:00")
-    private Date createdOn;
+    private Instant createdOn;
 
     /** Timestamp when the food item record was last updated. */
     @Schema(description = "Date when the food item was last updated", example = "2024-01-01T00:00:00.000+00:00")
-    private Date updatedOn;
+    private Instant updatedOn;
 }

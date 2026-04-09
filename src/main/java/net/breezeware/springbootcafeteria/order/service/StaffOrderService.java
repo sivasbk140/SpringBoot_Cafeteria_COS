@@ -17,7 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -208,13 +209,13 @@ public class StaffOrderService {
      * @implNote Internal helper for lightweight list responses.
      */
     private OrderSummaryDetailDto mapToSummary(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         return new OrderSummaryDetailDto(
                 order.getId(),
                 order.getUser().getId(),
                 order.getStatus(),
-                order.getTotalPrice(),
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 
@@ -227,14 +228,14 @@ public class StaffOrderService {
      * @implNote Delivery details are fetched from OrderDeliveryMap; null-safe if not present.
      */
     private OrderDetailDto mapToDetail(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
         List<OrderDetailDto.OrderItemDetailDTO> itemDetails = order.getItems().stream()
                 .map(item -> new OrderDetailDto.OrderItemDetailDTO(
                         item.getFoodItem().getName(),
                         item.getQuantity(),
                         item.getPrice(),
-                        item.getTotalPrice()
+                        item.getPrice() * item.getQuantity()
                 ))
                 .collect(Collectors.toList());
 
@@ -254,11 +255,11 @@ public class StaffOrderService {
                 order.getUser().getName(),
                 order.getStatus(),
                 itemDetails,
-                order.getTotalPrice(),
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
                 deliveryName,
                 deliveryPhone,
                 deliveryAddress,
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 }

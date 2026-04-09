@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import net.breezeware.springbootcafeteria.food.enumeration.MenuDay;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -42,5 +42,5 @@ public class AdminFoodMenuResponse {
 
     /** Timestamp when the menu was created. */
     @Schema(description = "Date and time when the menu was created", example = "2024-01-01T00:00:00")
-    private LocalDateTime createdOn;
+    private Instant createdOn;
 }

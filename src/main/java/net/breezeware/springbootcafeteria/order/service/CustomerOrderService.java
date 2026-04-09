@@ -22,7 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,12 +71,14 @@ public class CustomerOrderService {
      * @implNote If the item already exists in the cart, quantity is incremented instead of adding a duplicate.
      */
     public List<CartItemDto> addToCart(Long userId, String foodItemName, int quantity) {
-        log.info("Adding foodItem: {} to cart for userId: {}", foodItemName, userId);
+        log.info("Adding foodItem: {} to cart for userId: {} in service layer", foodItemName, userId);
 
         FoodItem foodItem = foodItemRepository.findByNameIgnoreCase(foodItemName)
-                .orElseThrow(() -> new AppCustomException("Food item not found with name: " + foodItemName, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Food item not found with name: {}", foodItemName);
+                    return new AppCustomException("Food item not found with name: " + foodItemName, HttpStatus.NOT_FOUND); });
 
-        if (!foodItem.hasStock(quantity)) {
+        if (foodItem.getQuantity() < quantity) {
+            log.error("Insufficient stock for item: {}, available: {}, requested: {}", foodItem.getName(), foodItem.getQuantity(), quantity);
             throw new AppCustomException("Insufficient stock for item: " + foodItem.getName(), HttpStatus.BAD_REQUEST);
         }
 
@@ -86,6 +89,7 @@ public class CustomerOrderService {
             if (existing.getFoodItemName().equalsIgnoreCase(foodItemName)) {
                 existing.setQuantity(existing.getQuantity() + quantity);
                 existing.setTotalPrice(foodItem.getPrice() * existing.getQuantity());
+                log.info("Updated quantity for item: {} in cart for userId: {}", foodItemName, userId);
                 return cart;
             }
         }
@@ -98,6 +102,7 @@ public class CustomerOrderService {
                 quantity
         ));
 
+        log.info("Added new item: {} to cart for userId: {}", foodItemName, userId);
         return cart;
     }
 
@@ -110,7 +115,7 @@ public class CustomerOrderService {
      */
     @Transactional(readOnly = true)
     public List<CartItemDto> viewCart(Long userId) {
-        log.info("Viewing cart for userId: {}", userId);
+        log.info("Viewing cart for userId: {} in service layer", userId);
         return cartStore.getOrDefault(userId, new ArrayList<>());
     }
 
@@ -128,21 +133,24 @@ public class CustomerOrderService {
      * @implNote If the resulting quantity is zero or less, the item is fully removed from the cart.
      */
     public List<CartItemDto> removeFromCart(Long userId, String foodItemName, int quantity) {
-        log.info("Removing {} unit(s) of foodItem: {} from cart for userId: {}", quantity, foodItemName, userId);
+        log.info("Removing {} unit(s) of foodItem: {} from cart for userId: {} in service layer", quantity, foodItemName, userId);
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
 
         CartItemDto item = cart.stream()
                 .filter(c -> c.getFoodItemName().equalsIgnoreCase(foodItemName))
                 .findFirst()
-                .orElseThrow(() -> new AppCustomException("Food item not found in cart: " + foodItemName, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Food item not found in cart: {} for userId: {}", foodItemName, userId);
+                    return new AppCustomException("Food item not found in cart: " + foodItemName, HttpStatus.NOT_FOUND); });
 
         int newQuantity = item.getQuantity() - quantity;
         if (newQuantity <= 0) {
             cart.remove(item);
+            log.info("Item: {} fully removed from cart for userId: {}", foodItemName, userId);
         } else {
             double unitPrice = item.getTotalPrice() / item.getQuantity();
             item.setQuantity(newQuantity);
             item.setTotalPrice(unitPrice * newQuantity);
+            log.info("Item: {} quantity reduced to {} in cart for userId: {}", foodItemName, newQuantity, userId);
         }
 
         return cart;
@@ -162,32 +170,36 @@ public class CustomerOrderService {
      * @implSpec Stock is reduced for each item during checkout. Cart is cleared on success.
      */
     public OrderDetailDto checkout(Long userId, OrderDeliveryRequest deliveryRequest) {
-        log.info("Checkout for userId: {}", userId);
+        log.info("Checkout for userId: {} in service layer", userId);
 
         List<CartItemDto> cart = cartStore.getOrDefault(userId, new ArrayList<>());
         if (cart.isEmpty()) {
+            log.error("Cart is empty for userId: {}", userId);
             throw new AppCustomException("Cart is empty for userId: " + userId, HttpStatus.BAD_REQUEST);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppCustomException("User not found with id: " + userId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("User not found for id: {}", userId);
+                    return new AppCustomException("User not found with id: " + userId, HttpStatus.NOT_FOUND); });
 
         Order order = new Order(user, OrderStatus.PLACED_ORDER);
 
         for (CartItemDto cartItem : cart) {
             FoodItem foodItem = foodItemRepository.findByIdWithLock(cartItem.getFoodItemId())
-                    .orElseThrow(() -> new AppCustomException("Food item not found: " + cartItem.getFoodItemId(), HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> { log.error("Food item not found for id: {}", cartItem.getFoodItemId());
+                        return new AppCustomException("Food item not found: " + cartItem.getFoodItemId(), HttpStatus.NOT_FOUND); });
 
             int qty = cartItem.getQuantity();
-            if (!foodItem.hasStock(qty)) {
+            if (foodItem.getQuantity() < qty) {
+                log.error("Insufficient stock for item: {}, available: {}, requested: {}", foodItem.getName(), foodItem.getQuantity(), qty);
                 throw new AppCustomException("Insufficient stock for item: " + foodItem.getName(), HttpStatus.BAD_REQUEST);
             }
 
-            foodItem.reduceStock(qty);
+            foodItem.setQuantity(foodItem.getQuantity() - qty);
             foodItemRepository.save(foodItem);
 
             OrderItem orderItem = new OrderItem(order, foodItem, foodItem.getPrice(), qty);
-            order.addItem(orderItem);
+            order.getItems().add(orderItem);
         }
 
         Order saved = orderRepository.save(order);
@@ -198,6 +210,7 @@ public class CustomerOrderService {
         // Clear cart after successful checkout
         cartStore.remove(userId);
 
+        log.info("Order placed successfully for userId: {}, orderId: {}", userId, saved.getId());
         return mapToDetail(saved);
     }
 
@@ -212,14 +225,16 @@ public class CustomerOrderService {
      */
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getMyOrders(Long userId) {
-        log.info("Customer fetching orders for userId: {}", userId);
+        log.info("Customer fetching orders for userId: {} in service layer", userId);
         List<OrderSummaryDetailDto> myOrders = orderRepository.findByUserId(userId).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
         if (myOrders.isEmpty()) {
+            log.error("No orders found for user with id: {}", userId);
             throw new AppCustomException("No orders found for user with id: " + userId, HttpStatus.NOT_FOUND);
         }
+        log.info("Returning {} orders for userId: {}", myOrders.size(), userId);
         return myOrders;
     }
 
@@ -237,14 +252,17 @@ public class CustomerOrderService {
      */
     @Transactional(readOnly = true)
     public OrderDetailDto getOrderDetail(Long orderId, Long userId) {
-        log.info("Customer fetching order detail for orderId: {}, userId: {}", orderId, userId);
+        log.info("Customer fetching order detail for orderId: {}, userId: {} in service layer", orderId, userId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (!order.getUser().getId().equals(userId)) {
+            log.error("Access denied: Order {} does not belong to userId: {}", orderId, userId);
             throw new AppCustomException("Access denied: Order does not belong to this user", HttpStatus.FORBIDDEN);
         }
 
+        log.info("Order detail found for orderId: {}", orderId);
         return mapToDetail(order);
     }
 
@@ -262,26 +280,30 @@ public class CustomerOrderService {
      * @implSpec Stock is restored for each cancelled item upon successful cancellation.
      */
     public OrderDetailDto cancelOrder(Long orderId, Long userId) {
-        log.info("Customer cancelling order: {}", orderId);
+        log.info("Customer cancelling order: {} for userId: {} in service layer", orderId, userId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (!order.getUser().getId().equals(userId)) {
+            log.error("Access denied: Order {} does not belong to userId: {}", orderId, userId);
             throw new AppCustomException("Access denied: Order does not belong to this user", HttpStatus.FORBIDDEN);
         }
 
-        if (!order.canBeCancelled()) {
+        if (!order.getStatus().isCancellable()) {
+            log.error("Order {} cannot be cancelled in status: {}", orderId, order.getStatus());
             throw new AppCustomException("Order cannot be cancelled in status: " + order.getStatus(), HttpStatus.BAD_REQUEST);
         }
 
         // Restore stock for each cancelled item
         for (OrderItem item : order.getItems()) {
-            item.getFoodItem().restoreStock(item.getQuantity());
+            item.getFoodItem().setQuantity(item.getFoodItem().getQuantity() + item.getQuantity());
             foodItemRepository.save(item.getFoodItem());
         }
 
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
+        log.info("Order {} cancelled successfully", orderId);
         return mapToDetail(updated);
     }
 
@@ -295,13 +317,14 @@ public class CustomerOrderService {
      * @implNote Internal helper for lightweight list responses.
      */
     private OrderSummaryDetailDto mapToSummary(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.debug("Mapping order to summary: {}", order.getId());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         return new OrderSummaryDetailDto(
                 order.getId(),
                 order.getUser().getId(),
                 order.getStatus(),
-                order.getTotalPrice(),
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 
@@ -314,14 +337,15 @@ public class CustomerOrderService {
      * @implNote Delivery details are fetched from OrderDeliveryMap; null-safe if not present.
      */
     private OrderDetailDto mapToDetail(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.debug("Mapping order to detail: {}", order.getId());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
 
         List<OrderDetailDto.OrderItemDetailDTO> itemDetails = order.getItems().stream()
                 .map(item -> new OrderDetailDto.OrderItemDetailDTO(
                         item.getFoodItem().getName(),
                         item.getQuantity(),
                         item.getPrice(),
-                        item.getTotalPrice()
+                        item.getPrice() * item.getQuantity()
                 ))
                 .collect(Collectors.toList());
 
@@ -341,11 +365,11 @@ public class CustomerOrderService {
                 order.getUser().getName(),
                 order.getStatus(),
                 itemDetails,
-                order.getTotalPrice(),
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
                 deliveryName,
                 deliveryPhone,
                 deliveryAddress,
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 }

@@ -17,7 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,15 +53,17 @@ public class AdminOrderService {
      * @apiNote Only admin users are allowed to view all orders.
      */
     public List<OrderSummaryDetailDto> getAllOrders() {
-        log.info("Admin fetching all orders");
+        log.info("Admin fetching all orders in service layer");
         List<OrderSummaryDetailDto> orders = orderRepository.findAll().stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
         if (orders.isEmpty()) {
+            log.error("No orders found in the system");
             throw new AppCustomException("No orders found in the system", HttpStatus.NOT_FOUND);
         }
 
+        log.info("Returning {} orders", orders.size());
         return orders;
     }
 
@@ -76,9 +79,11 @@ public class AdminOrderService {
      */
     @Transactional(readOnly = true)
     public OrderDetailDto getOrderById(Long orderId) {
-        log.info("Admin fetching order by id: {}", orderId);
+        log.info("Admin fetching order by id: {} in service layer", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
+        log.info("Order found with id: {}", orderId);
         return mapToDetail(order);
     }
 
@@ -92,14 +97,16 @@ public class AdminOrderService {
      */
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getOrdersByStatus(OrderStatus status) {
-        log.info("Admin fetching orders by status: {}", status);
+        log.info("Admin fetching orders by status: {} in service layer", status);
         List<OrderSummaryDetailDto> ordersByStatus = orderRepository.findByStatus(status).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
         if (ordersByStatus.isEmpty()) {
+            log.error("No orders found for the status: {}", status);
             throw new AppCustomException("No orders found for the status: " + status, HttpStatus.NOT_FOUND);
         }
+        log.info("Returning {} orders for status: {}", ordersByStatus.size(), status);
         return ordersByStatus;
     }
 
@@ -113,14 +120,16 @@ public class AdminOrderService {
      */
     @Transactional(readOnly = true)
     public List<OrderSummaryDetailDto> getOrdersByUserId(Long userId) {
-        log.info("Admin fetching orders for user: {}", userId);
+        log.info("Admin fetching orders for user: {} in service layer", userId);
         List<OrderSummaryDetailDto> ordersById = orderRepository.findByUserId(userId).stream()
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
 
         if (ordersById.isEmpty()) {
+            log.error("No orders found for the user with id: {}", userId);
             throw new AppCustomException("No orders found for the user with id: " + userId, HttpStatus.NOT_FOUND);
         }
+        log.info("Returning {} orders for user: {}", ordersById.size(), userId);
         return ordersById;
     }
 
@@ -136,15 +145,18 @@ public class AdminOrderService {
      * @implNote Status transitions are validated via the OrderStatus state machine.
      */
     public OrderDetailDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
-        log.info("Admin updating order {} status to {}", orderId, newStatus);
+        log.info("Admin updating order {} status to {} in service layer", orderId, newStatus);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (!order.getStatus().canTransitionTo(newStatus)) {
+            log.error("Invalid status transition: {} -> {} for order: {}", order.getStatus(), newStatus, orderId);
             throw new AppCustomException("Invalid status transition: " + order.getStatus() + " -> " + newStatus, HttpStatus.BAD_REQUEST);
         }
         order.setStatus(newStatus);
         Order updated = orderRepository.save(order);
+        log.info("Order {} status updated to {} successfully", orderId, newStatus);
         return mapToDetail(updated);
     }
 
@@ -161,28 +173,34 @@ public class AdminOrderService {
      * @implSpec Order status is automatically transitioned to ASSIGNED_DELIVERY_STAFF after assignment.
      */
     public OrderDetailDto assignDeliveryStaff(Long orderId, Long staffId) {
-        log.info("Admin assigning delivery staff {} to order {}", staffId, orderId);
+        log.info("Admin assigning delivery staff {} to order {} in service layer", staffId, orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (order.getStatus() != OrderStatus.ORDER_PREPARING) {
+            log.error("Order {} is not in ORDER_PREPARING status, current status: {}", orderId, order.getStatus());
             throw new AppCustomException("Order must be in ORDER_PREPARING status to assign delivery staff", HttpStatus.BAD_REQUEST);
         }
 
         User deliveryStaff = userRepository.findById(staffId)
-                .orElseThrow(() -> new AppCustomException("Delivery staff not found with id: " + staffId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Delivery staff not found for id: {}", staffId);
+                    return new AppCustomException("Delivery staff not found with id: " + staffId, HttpStatus.NOT_FOUND); });
 
         if (deliveryStaff.getRole() != Role.DELIVERY_STAFF) {
+            log.error("User {} is not a delivery staff, role: {}", staffId, deliveryStaff.getRole());
             throw new AppCustomException("User with id " + staffId + " is not a delivery staff", HttpStatus.BAD_REQUEST);
         }
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new AppCustomException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("No delivery details found for order: {}", orderId);
+                    return new AppCustomException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND); });
         deliveryMap.setDeliveryStaffId(staffId);
         orderDeliveryMapRepository.save(deliveryMap);
 
         order.setStatus(OrderStatus.ASSIGNED_DELIVERY_STAFF);
         Order updated = orderRepository.save(order);
+        log.info("Delivery staff {} assigned to order {} successfully", staffId, orderId);
         return mapToDetail(updated);
     }
 
@@ -197,15 +215,18 @@ public class AdminOrderService {
      * @apiNote This operation is irreversible.
      */
     public OrderDetailDto cancelOrder(Long orderId) {
-        log.info("Admin force cancelling order: {}", orderId);
+        log.info("Admin force cancelling order: {} in service layer", orderId);
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (!order.getStatus().isForceCancellable()) {
+            log.error("Order {} cannot be cancelled, current status: {}", orderId, order.getStatus());
             throw new AppCustomException("Order is already delivered or cancelled, cannot cancel.", HttpStatus.BAD_REQUEST);
         }
         order.setStatus(OrderStatus.ORDER_CANCELLED);
         Order updated = orderRepository.save(order);
+        log.info("Order {} cancelled successfully", orderId);
         return mapToDetail(updated);
     }
 
@@ -218,13 +239,14 @@ public class AdminOrderService {
      * @implNote Internal helper for lightweight list responses.
      */
     private OrderSummaryDetailDto mapToSummary(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.debug("Mapping order to summary: {}", order.getId());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         return new OrderSummaryDetailDto(
                 order.getId(),
                 order.getUser().getId(),
                 order.getStatus(),
-                order.getTotalPrice(),
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 
@@ -237,13 +259,14 @@ public class AdminOrderService {
      * @implNote Delivery details are fetched from OrderDeliveryMap; null-safe if not present.
      */
     private OrderDetailDto mapToDetail(Order order) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        log.debug("Mapping order to detail: {}", order.getId());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         List<OrderDetailDto.OrderItemDetailDTO> itemDetails = order.getItems().stream()
                 .map(item -> new OrderDetailDto.OrderItemDetailDTO(
                         item.getFoodItem().getName(),
                         item.getQuantity(),
                         item.getPrice(),
-                        item.getTotalPrice()
+                        item.getPrice() * item.getQuantity()
                 ))
                 .collect(Collectors.toList());
 
@@ -263,11 +286,11 @@ public class AdminOrderService {
                 order.getUser().getName(),
                 order.getStatus(),
                 itemDetails,
-                order.getTotalPrice(),
+                order.getItems().stream().mapToDouble(i -> i.getPrice() * i.getQuantity()).sum(),
                 deliveryName,
                 deliveryPhone,
                 deliveryAddress,
-                order.getCreatedOn() != null ? sdf.format(order.getCreatedOn()) : null
+                order.getCreatedOn() != null ? dtf.format(order.getCreatedOn()) : null
         );
     }
 }

@@ -3,10 +3,7 @@ package net.breezeware.springbootcafeteria.food.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Instant;
-import java.util.Date;
 /**
  * Entity representing a food item available in the cafeteria system.
  *
@@ -18,7 +15,6 @@ import java.util.Date;
  * @version 1.0
  * @since 1.0
  */
-@Slf4j
 @Entity
 @Table(name = "food_item")
 @Data
@@ -125,50 +121,6 @@ public class FoodItem {
     @PreUpdate
     protected void onUpdate() {
         updatedOn = Instant.now();
-    }
-
-    // Business logic
-
-    /**
-     * Returns whether this food item is currently in stock.
-     *
-     * @return {@code true} if {@code quantity > 0}, {@code false} otherwise
-     */
-    public boolean isAvailable() {
-        return quantity > 0;
-    }
-
-    /**
-     * Checks whether the available stock can satisfy the requested quantity.
-     *
-     * @param requestedQuantity the quantity the customer wants to order
-     * @return {@code true} if {@code quantity >= requestedQuantity}
-     */
-    public boolean hasStock(int requestedQuantity) {
-        return quantity >= requestedQuantity;
-    }
-
-    /**
-     * Reduces the stock of this food item by the given amount.
-     * Called when an order is placed to deduct units from inventory.
-     *
-     * @param amount the number of units to deduct from stock
-     */
-    public void reduceStock(int amount) {
-        if (amount > quantity) {
-            throw new IllegalArgumentException("Insufficient stock for item: " + name);
-        }
-        this.quantity -= amount;
-    }
-
-    /**
-     * Restores the stock of this food item by the given amount.
-     * Called when an order is cancelled to return units back to inventory.
-     *
-     * @param amount the number of units to add back to stock
-     */
-    public void restoreStock(int amount) {
-        this.quantity += amount;
     }
 
 }

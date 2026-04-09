@@ -3,9 +3,9 @@ package net.breezeware.springbootcafeteria.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.breezeware.springbootcafeteria.exception.AppCustomException;
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.entity.User;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.dao.UserRepository;
@@ -45,14 +45,17 @@ public class AdminUserService {
      *
      * @apiNote Returns HTTP 401 for invalid credentials.
      */
-    public UserResponseDto login(UserLoginRequestDto request) {
+    public UserResponse login(UserLoginRequest request) {
         log.info("Admin logging In service layer");
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> { log.error("Login failed: email not found :{}" ,request.getEmail());
+                    return new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED); });
 
         if (!user.getPassword().equals(request.getPassword())) {
+            log.error("Login Failed : incorrect password for Email :{}", request.getEmail());
             throw new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }
+
 
         return mapToResponse(user);
     }
@@ -67,9 +70,10 @@ public class AdminUserService {
      *
      * @implSpec New users are persisted with the ADMIN role automatically assigned.
      */
-    public UserResponseDto registerUser(UserRequestDto request) {
+    public UserResponse registerUser(UserRequest request) {
         log.info("Registering new Admin service layer");
         if (userRepository.existsByEmail(request.getEmail())) {
+              log.error("Email already exist: {}" ,request.getEmail());
             throw new AppCustomException("Email already registered", HttpStatus.CONFLICT);
         }
 
@@ -79,7 +83,7 @@ public class AdminUserService {
                 request.getPassword(),
                 Role.ADMIN
         );
-
+        log.info("Admin registered successfully with email: {}", request.getEmail());
         User savedUser = userRepository.save(user);
         return mapToResponse(savedUser);
     }
@@ -94,10 +98,13 @@ public class AdminUserService {
      *
      * @apiNote Returns HTTP 404 if the user does not exist.
      */
-    public UserResponseDto getUserById(Long id) {
+    public UserResponse getUserById(Long id) {
         log.info("view user by id in service layer");
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new AppCustomException("User not found", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("user not found for id :{}",id);
+                    return new AppCustomException("User not found", HttpStatus.NOT_FOUND);
+                });
+        log.info("User found with id: {}", id);
         return mapToResponse(user);
     }
 
@@ -110,17 +117,18 @@ public class AdminUserService {
      *
      * @apiNote Only admin users are permitted to call this operation.
      */
-    public List<UserResponseDto> getAllUsers() {
+    public List<UserResponse> getAllUsers() {
         log.info("get all users in service layer");
 
-        List<UserResponseDto> users = userRepository.findAll().stream()
+        List<UserResponse> users = userRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
 
         if (users.isEmpty()) {
+            log.error("no  users found in the system");
             throw new AppCustomException("No users found in the system", HttpStatus.NOT_FOUND);
         }
-
+      log.info("returning users");
         return users;
     }
 
@@ -132,8 +140,9 @@ public class AdminUserService {
      *
      * @implNote Internal helper method for DTO conversion.
      */
-    private UserResponseDto mapToResponse(User user) {
-        return new UserResponseDto(
+    private UserResponse mapToResponse(User user) {
+        log.debug("Mapping user to response: {}", user.getId());
+        return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),

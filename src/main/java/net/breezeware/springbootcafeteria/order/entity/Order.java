@@ -9,7 +9,6 @@ import net.breezeware.springbootcafeteria.order.enumeration.OrderStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -112,51 +111,6 @@ public class Order {
     @PreUpdate
     protected void onUpdate() {
         updatedOn = Instant.now();
-    }
-
-    /**
-     * Adds an item to the order and sets the bidirectional relationship.
-     *
-     * @param item the OrderItem to add
-     *
-     * @implNote Ensures both sides of the relationship are synchronized.
-     */
-    public void addItem(OrderItem item) {
-        items.add(item);
-        item.setOrder(this);
-    }
-
-    /**
-     * Calculates the total price of the order.
-     *
-     * @return total price as the sum of all item prices
-     *
-     * @implSpec Computed dynamically from OrderItem list.
-     */
-    public Double getTotalPrice() {
-        return items.stream()
-                .mapToDouble(OrderItem::getTotalPrice)
-                .sum();
-    }
-
-    /**
-     * Checks whether the order contains any items.
-     *
-     * @return true if no items are present, false otherwise
-     */
-    public boolean isEmpty() {
-        return items.isEmpty();
-    }
-
-    /**
-     * Determines whether the order can be cancelled by the customer.
-     *
-     * @return true if the current status allows cancellation
-     *
-     * @see OrderStatus#isCancellable()
-     */
-    public boolean canBeCancelled() {
-        return status.isCancellable();
     }
 
 }

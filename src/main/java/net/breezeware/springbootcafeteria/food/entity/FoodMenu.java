@@ -7,7 +7,6 @@ import lombok.*;
 import net.breezeware.springbootcafeteria.food.enumeration.MenuDay;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -106,23 +105,4 @@ public class FoodMenu {
         updatedOn = Instant.now();
     }
 
-    /**
-     * Adds a food item mapping to this menu and sets the back-reference on the mapping.
-     *
-     * @param menuItem the {@link FoodMenuItemMap} to add to this menu
-     */
-    public void addMenuItem(FoodMenuItemMap menuItem) {
-        menuItems.add(menuItem);
-        menuItem.setMenu(this);
-    }
-
-    /**
-     * Removes a food item mapping from this menu and clears the back-reference.
-     *
-     * @param menuItem the {@link FoodMenuItemMap} to remove from this menu
-     */
-    public void removeMenuItem(FoodMenuItemMap menuItem) {
-        menuItems.remove(menuItem);
-        menuItem.setMenu(null);
-    }
 }

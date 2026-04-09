@@ -1,8 +1,8 @@
 package net.breezeware.springbootcafeteria.user.service;
 
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.entity.User;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.dao.UserRepository;
@@ -34,8 +34,8 @@ class AdminUserServiceTest {
     void register_success() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
 
         User userEntity =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
@@ -44,7 +44,7 @@ class AdminUserServiceTest {
                 .thenReturn(userEntity);
 
         // Act
-        UserResponseDto result = adminUserService.registerUser(requestDto);
+        UserResponse result = adminUserService.registerUser(requestDto);
 
         // Assert
         assertNotNull(result);
@@ -55,8 +55,8 @@ class AdminUserServiceTest {
     void register_failed_emailAlreadyExists() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
 
         when(userRepository.save(any(User.class)))
                 .thenThrow(new RuntimeException("Email Already Registered"));
@@ -82,7 +82,7 @@ class AdminUserServiceTest {
         when(userRepository.findAll()).thenReturn(userList);
 
         // Act
-        List<UserResponseDto> responseList = adminUserService.getAllUsers();
+        List<UserResponse> responseList = adminUserService.getAllUsers();
 
         // Assert
         assertEquals(2, responseList.size());
@@ -114,7 +114,7 @@ class AdminUserServiceTest {
                 .thenReturn(Optional.of(user));
 
 
-        UserResponseDto response = adminUserService.getUserById(1L);
+        UserResponse response = adminUserService.getUserById(1L);
 
 
         assertNotNull(response);
@@ -143,8 +143,8 @@ class AdminUserServiceTest {
     void login_success() {
 
         // Arrange
-        UserLoginRequestDto request =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest request =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         User user =
                 new User("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
@@ -153,7 +153,7 @@ class AdminUserServiceTest {
                 .thenReturn(Optional.of(user));
 
         // Act
-        UserResponseDto response = adminUserService.login(request);
+        UserResponse response = adminUserService.login(request);
 
         // Assert
         assertNotNull(response);
@@ -167,8 +167,8 @@ class AdminUserServiceTest {
     void login_failed_user_not_found() {
 
         // Arrange
-        UserLoginRequestDto request =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest request =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         when(userRepository.findByEmail("sikar@gmail.com"))
                 .thenReturn(Optional.empty());

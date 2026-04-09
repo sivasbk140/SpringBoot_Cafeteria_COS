@@ -1,8 +1,8 @@
 package net.breezeware.springbootcafeteria.user.controller;
 
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.service.AdminUserService;
 import org.junit.jupiter.api.Test;
@@ -32,17 +32,17 @@ class AdminUserControllerTest {
     void register_success() {
 
         // Arrange
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
 
-        UserResponseDto responseDto =
-                new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
+        UserResponse responseDto =
+                new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
 
         when(adminUserService.registerUser(requestDto))
                 .thenReturn(responseDto);
 
         // Act
-        ResponseEntity<UserResponseDto> response =
+        ResponseEntity<UserResponse> response =
                 adminUserController.registerUser(requestDto);
 
         // Assert
@@ -52,8 +52,8 @@ class AdminUserControllerTest {
 
     @Test
     public void register_failed() {
-        UserRequestDto requestDto =
-                new UserRequestDto("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
+        UserRequest requestDto =
+                new UserRequest("Sikar", "sikar@gmail.com", "sikar@123", Role.ADMIN);
         when(adminUserService.registerUser(requestDto))
                 .thenThrow(new RuntimeException("Email already exist"));
 
@@ -67,16 +67,16 @@ class AdminUserControllerTest {
 
     @Test
     public void login_successful() {
-        UserLoginRequestDto loginDto =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest loginDto =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
-        UserResponseDto responseDto =
-                new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
+        UserResponse responseDto =
+                new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
 
         when(adminUserService.login(loginDto))
                 .thenReturn(responseDto);
 
-        ResponseEntity<UserResponseDto> response =
+        ResponseEntity<UserResponse> response =
                 adminUserController.login(loginDto);
 
         // Assert
@@ -91,8 +91,8 @@ class AdminUserControllerTest {
 
     @Test
     public void login_failed() {
-        UserLoginRequestDto loginDto =
-                new UserLoginRequestDto("sikar@gmail.com", "sikar@123");
+        UserLoginRequest loginDto =
+                new UserLoginRequest("sikar@gmail.com", "sikar@123");
 
         when(adminUserService.login(loginDto))
                 .thenThrow(new RuntimeException("Login Failed password or mail is wrong"));
@@ -110,17 +110,17 @@ class AdminUserControllerTest {
     public void get_all_users_successful() {
 
         // Arrange
-        List<UserResponseDto> responseDtoList = new ArrayList<>();
-        responseDtoList.add(new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.ADMIN));
-        responseDtoList.add(new UserResponseDto(2L, "Sika", "sika@gmail.com", Role.ADMIN));
+        List<UserResponse> responseDtoList = new ArrayList<>();
+        responseDtoList.add(new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.ADMIN));
+        responseDtoList.add(new UserResponse(2L, "Sika", "sika@gmail.com", Role.ADMIN));
 
         when(adminUserService.getAllUsers()).thenReturn(responseDtoList);
 
         // Act
-        ResponseEntity<List<UserResponseDto>> response =
+        ResponseEntity<List<UserResponse>> response =
                 adminUserController.getAllUsers();
 
-        List<UserResponseDto> responseList = response.getBody();
+        List<UserResponse> responseList = response.getBody();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -150,13 +150,13 @@ class AdminUserControllerTest {
 
     @Test
     public void get_user_by_id_success() {
-        UserResponseDto responseDto =
-                new UserResponseDto(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
+        UserResponse responseDto =
+                new UserResponse(1L, "Sikar", "sikar@gmail.com", Role.ADMIN);
 
         when(adminUserService.getUserById(1L))
                 .thenReturn(responseDto);
 
-        ResponseEntity<UserResponseDto> response =
+        ResponseEntity<UserResponse> response =
                 adminUserController.getUserById(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

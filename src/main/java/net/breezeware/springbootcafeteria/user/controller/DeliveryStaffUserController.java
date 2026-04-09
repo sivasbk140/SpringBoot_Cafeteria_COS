@@ -2,19 +2,22 @@ package net.breezeware.springbootcafeteria.user.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.service.DeliveryStaffService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.*;
 
 
 @Tag(name = "Delivery Staff User APIs", description = "APIs for delivery staff registration and login")
@@ -28,35 +31,103 @@ public class DeliveryStaffUserController {
     private final DeliveryStaffService deliveryStaffService;
 
     @Operation(summary = "Register delivery staff", description = "Registers a new delivery staff account")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Delivery staff registration details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = UserRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "valid delivery staff",
+                                    value = """
+                                        {
+                                          "name": "raja",
+                                          "email": "raja@gmail.com",
+                                          "password": "raja@123",
+                                          "role": "DELIVERY_STAFF"
+                                        }
+                                        """
+                            ),
+                            @ExampleObject(
+                                    name = "Another Delivery Staff",
+                                    value = """
+                                        {
+                                          "name": "mani",
+                                          "email": "mani@example.com",
+                                          "password": "mani@456",
+                                          "role": "DELIVERY_STAFF"
+                                        }
+                                        """
+                            )
+                    }
+            )
+    )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Delivery Staff registered successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Email already registered", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Registration successful",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 201,
+                          "message": "Registration Successful"
+                        }
+                    """))),
+            @ApiResponse(responseCode = "400", description = "Email Already Exists",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 400,
+                          "message": "Email Already Exists"
+                        }
+                    """)))
     })
-
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserRequestDto request) {
-        log.info("Registering the staff user");
-        UserResponseDto response = deliveryStaffService.registerUser(request);
+    public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid UserRequest request) {
+        log.info("Registering the delivery staff user");
+        UserResponse response = deliveryStaffService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "Delivery Staff login", description = "Authenticates a delivery staff member with email and password")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Delivery staff login details",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = UserLoginRequest.class),
+                    examples = {
+                            @ExampleObject(
+                                    name = "valid delivery staff",
+                                    value = """
+                                        {
+                                          "email": "raja@gmail.com",
+                                          "password": "raja@123"
+                                        }
+                                        """
+                            ),
+                            @ExampleObject(
+                                    name = "Another Delivery Staff",
+                                    value = """
+                                        {
+                                          "email": "mani@example.com",
+                                          "password": "mani@456"
+                                        }
+                                        """
+                            )
+                    }
+            )
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Login successful",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid email or password", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
+                        {
+                          "statusCode": 200,
+                          "message": "Login Successful"
+                        }
+                    """)))
     })
-
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDto> login(@RequestBody UserLoginRequestDto request) {
+    public ResponseEntity<UserResponse> login(@RequestBody @Valid UserLoginRequest request) {
         log.info("Logging in with mail and password");
-        UserResponseDto response = deliveryStaffService.login(request);
+        UserResponse response = deliveryStaffService.login(request);
         return ResponseEntity.ok(response);
     }
 }
-

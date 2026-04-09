@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.util.Date;
 
 /**
  * Entity representing the delivery contact details for a delivery staff member.

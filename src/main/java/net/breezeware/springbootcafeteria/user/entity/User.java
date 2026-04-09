@@ -6,9 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import net.breezeware.springbootcafeteria.order.entity.Order;
@@ -45,6 +43,7 @@ public class User {
     @NotBlank(message = "Name is required")
     @NonNull
     @Column(nullable = false, length = 100)
+    @Schema (description = "name",example = "siva")
     private String name;
 
     /**
@@ -54,7 +53,7 @@ public class User {
     @NotBlank(message = "Email is required")
     @NonNull
     @Column(nullable = false, unique = true, length = 100)
-    @Schema(example = "",description = "")
+    @Schema (description = "emailId",example = "siva@gmail.com")
     private String email;
 
     /**
@@ -63,6 +62,7 @@ public class User {
     @NotBlank(message = "Password is required")
     @NonNull
     @Column(nullable = false)
+    @Schema (description = "password",example = "siva@123")
     private String password;
 
     /**
@@ -74,6 +74,7 @@ public class User {
     @NotNull(message = "Role is required")
     @NonNull
     @Column(nullable = false)
+    @Schema (description = "role of the user")
     private Role role;
 
     /**
@@ -93,64 +94,5 @@ public class User {
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DeliveryDetail> deliveryDetails = new ArrayList<>();
-
-    /**
-     * Timestamp when the user was created.
-     *
-     * Automatically set during persistence and not updatable.
-     */
-    @Column(name = "created_on", updatable = false)
-
-    private Instant createdOn;
-
-    /**
-     * Timestamp when the user record was last updated.
-     */
-    @Column(name = "updated_on")
-
-    private Instant updatedOn;
-
-    /**
-     * Lifecycle callback executed before persisting the entity.
-     *
-     * Initializes both createdOn and updatedOn timestamps.
-     */
-    @PrePersist
-    protected void onCreate() {
-        createdOn =  Instant.now();
-        updatedOn =  Instant.now();
-    }
-
-    /**
-     * Lifecycle callback executed before updating the entity.
-     *
-     * Refreshes the updatedOn timestamp.
-     */
-    @PreUpdate
-    protected void onUpdate() {
-        updatedOn =  Instant.now();
-    }
-
-    // Helper methods
-
-    /**
-     * Adds an order to this user's order list and sets the back-reference on the order.
-     *
-     * @param order the order to associate with this user
-     */
-    public void addOrder(Order order) {
-        orders.add(order);
-        order.setUser(this);
-    }
-
-    /**
-     * Adds a delivery detail record to this user and sets the back-reference.
-     *
-     * @param deliveryDetail the delivery detail to associate with this user
-     */
-    public void addDeliveryDetail(DeliveryDetail deliveryDetail) {
-        deliveryDetails.add(deliveryDetail);
-        deliveryDetail.setUser(this);
-    }
 
 }

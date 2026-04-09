@@ -6,7 +6,6 @@ import lombok.*;
 import net.breezeware.springbootcafeteria.food.entity.FoodItem;
 
 import java.time.Instant;
-import java.util.Date;
 
 /**
  * Entity representing a single line item within a customer order.
@@ -111,17 +110,6 @@ public class OrderItem {
     @PreUpdate
     protected void onUpdate() {
         updatedOn = Instant.now();
-    }
-
-    /**
-     * Calculates the total price for this line item.
-     *
-     * @return price multiplied by quantity
-     *
-     * @implSpec Computed dynamically from the unit price and quantity fields.
-     */
-    public Double getTotalPrice() {
-        return price * quantity;
     }
 
 }

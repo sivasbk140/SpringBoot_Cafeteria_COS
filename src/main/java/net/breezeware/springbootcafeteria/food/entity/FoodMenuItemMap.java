@@ -1,12 +1,10 @@
 package net.breezeware.springbootcafeteria.food.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 /**
  * Entity representing the mapping between a {@link FoodMenu} and a {@link FoodItem}.

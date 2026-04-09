@@ -3,9 +3,9 @@ package net.breezeware.springbootcafeteria.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.breezeware.springbootcafeteria.exception.AppCustomException;
-import net.breezeware.springbootcafeteria.user.dto.UserLoginRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserRequestDto;
-import net.breezeware.springbootcafeteria.user.dto.UserResponseDto;
+import net.breezeware.springbootcafeteria.user.dto.UserLoginRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserRequest;
+import net.breezeware.springbootcafeteria.user.dto.UserResponse;
 import net.breezeware.springbootcafeteria.user.entity.User;
 import net.breezeware.springbootcafeteria.user.enumeration.Role;
 import net.breezeware.springbootcafeteria.user.dao.UserRepository;
@@ -40,12 +40,14 @@ public class CustomerUserService {
      * @throws AppCustomException if email is not found or password does not match
      * @apiNote Returns HTTP 401 for invalid credentials.
      */
-    public UserResponseDto login(UserLoginRequestDto request) {
-        log.info("customer logging In service layer request = {}", request);
+    public UserResponse login(UserLoginRequest request) {
+        log.info("Customer logging In service layer");
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED));
+                .orElseThrow(() -> { log.error("Login failed: email not found :{}" ,request.getEmail());
+                    return new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED); });
 
         if (!user.getPassword().equals(request.getPassword())) {
+            log.error("Login Failed : incorrect password for Email :{}", request.getEmail());
             throw new AppCustomException("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }
 
@@ -60,9 +62,10 @@ public class CustomerUserService {
      * @throws AppCustomException if the email is already registered
      * @implSpec New users are persisted with the CUSTOMER role automatically assigned.
      */
-    public UserResponseDto registerUser(UserRequestDto request) {
-        log.info("Registering customer service layer request = {}", request);
+    public UserResponse registerUser(UserRequest request) {
+        log.info("Registering new Customer service layer");
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.error("Email already exist: {}" ,request.getEmail());
             throw new AppCustomException("Email already registered", HttpStatus.CONFLICT);
         }
 
@@ -72,7 +75,7 @@ public class CustomerUserService {
                 request.getPassword(),
                 Role.CUSTOMER
         );
-
+        log.info("Customer registered successfully with email: {}", request.getEmail());
         User savedUser = userRepository.save(user);
         return mapToResponse(savedUser);
     }
@@ -84,8 +87,9 @@ public class CustomerUserService {
      * @return UserResponseDto containing id, name, email, and role
      * @implNote Internal helper method for DTO conversion.
      */
-    private UserResponseDto mapToResponse(User user) {
-        return new UserResponseDto(
+    private UserResponse mapToResponse(User user) {
+        log.debug("Mapping user to response: {}", user.getId());
+        return new UserResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
