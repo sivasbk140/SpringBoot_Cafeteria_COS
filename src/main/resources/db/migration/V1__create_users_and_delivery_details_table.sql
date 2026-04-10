@@ -1,3 +1,12 @@
+CREATE TABLE "users" (
+                         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                         name TEXT NOT NULL,
+                         password TEXT NOT NULL,
+                         role TEXT NOT NULL CHECK (role IN ('ADMIN', 'STAFF', 'CUSTOMER', 'DELIVERY_STAFF')),
+                         email TEXT NOT NULL UNIQUE,
+                         created_on TIMESTAMP,
+                         updated_on TIMESTAMP
+);
 CREATE TABLE delivery_details (
                                   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                   email TEXT NOT NULL,
@@ -14,4 +23,4 @@ CREATE TABLE delivery_details (
     UNIQUE (email, user_id)
 );
 
-CREATE INDEX idx_delivery_user_id ON delivery_details(user_id);
+

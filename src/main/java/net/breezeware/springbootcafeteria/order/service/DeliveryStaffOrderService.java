@@ -48,12 +48,14 @@ public class DeliveryStaffOrderService {
      * @implNote Filters by delivery staff ID and order status to return only active assignments.
      */
     public List<OrderSummaryDetailDto> getAssignedOrders(Long staffId) {
-        log.info("Delivery staff {} fetching assigned orders", staffId);
-        return orderDeliveryMapRepository.findByDeliveryStaffId(staffId).stream()
+        log.info("Delivery staff {} fetching assigned orders in service layer", staffId);
+        List<OrderSummaryDetailDto> assignedOrders = orderDeliveryMapRepository.findByDeliveryStaffId(staffId).stream()
                 .map(OrderDeliveryMap::getOrder)
                 .filter(order -> order.getStatus() == OrderStatus.ASSIGNED_DELIVERY_STAFF)
                 .map(this::mapToSummary)
                 .collect(Collectors.toList());
+        log.info("Returning {} assigned orders for delivery staff {}", assignedOrders.size(), staffId);
+        return assignedOrders;
     }
 
     /**
@@ -71,24 +73,29 @@ public class DeliveryStaffOrderService {
      * @apiNote Returns HTTP 403 if the staff member is not assigned to this order.
      */
     public OrderDetailDto markOrderDelivered(Long orderId, Long staffId) {
-        log.info("Delivery staff {} marking order {} as delivered", staffId, orderId);
+        log.info("Delivery staff {} marking order {} as delivered in service layer", staffId, orderId);
 
         OrderDeliveryMap deliveryMap = orderDeliveryMapRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new AppCustomException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("No delivery details found for order: {}", orderId);
+                    return new AppCustomException("No delivery details found for order: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (!staffId.equals(deliveryMap.getDeliveryStaffId())) {
+            log.error("Order {} is not assigned to staff {}", orderId, staffId);
             throw new AppCustomException("Order " + orderId + " is not assigned to staff " + staffId, HttpStatus.FORBIDDEN);
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> { log.error("Order not found for id: {}", orderId);
+                    return new AppCustomException("Order not found with id: " + orderId, HttpStatus.NOT_FOUND); });
 
         if (order.getStatus() != OrderStatus.ASSIGNED_DELIVERY_STAFF) {
+            log.error("Order {} is not in ASSIGNED_DELIVERY_STAFF status, current status: {}", orderId, order.getStatus());
             throw new AppCustomException("Order must be in ASSIGNED_DELIVERY_STAFF status to mark as delivered", HttpStatus.BAD_REQUEST);
         }
 
         order.setStatus(OrderStatus.ORDER_DELIVERED);
         Order updated = orderRepository.save(order);
+        log.info("Order {} marked as delivered successfully by staff {}", orderId, staffId);
         return mapToDetail(updated);
     }
 
@@ -101,6 +108,7 @@ public class DeliveryStaffOrderService {
      * @implNote Internal helper for lightweight list responses.
      */
     private OrderSummaryDetailDto mapToSummary(Order order) {
+        log.debug("Mapping order to summary: {}", order.getId());
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         return new OrderSummaryDetailDto(
                 order.getId(),
@@ -120,6 +128,7 @@ public class DeliveryStaffOrderService {
      * @implNote Delivery details are fetched from OrderDeliveryMap; null-safe if not present.
      */
     private OrderDetailDto mapToDetail(Order order) {
+        log.debug("Mapping order to detail: {}", order.getId());
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         List<OrderDetailDto.OrderItemDetailDTO> itemDetails = order.getItems().stream()
                 .map(item -> new OrderDetailDto.OrderItemDetailDTO(

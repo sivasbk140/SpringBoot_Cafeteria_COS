@@ -137,9 +137,7 @@ public class AdminUserController {
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
                         {
                           "statusCode": 200,
-                          "message": "Login Successful"
-                   
-                        }
+                          "message": "Login Successful" }
                     """)))
     })
 
@@ -198,9 +196,7 @@ public class AdminUserController {
                     """))),
             @ApiResponse(responseCode = "200", description = "No users Found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
-                        {
-                    []
-                        }
+                        {[]}
                     """)))
 
     })
