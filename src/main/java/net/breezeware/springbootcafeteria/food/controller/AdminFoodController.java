@@ -93,7 +93,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @PostMapping("/items")
+    @PostMapping("/item")
     public ResponseEntity<FoodItemResponse> createFoodItem(
             @Valid @RequestBody FoodItemRequest request) {
         FoodItemResponse response = adminFoodService.createFoodItem(request);
@@ -156,7 +156,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @GetMapping("/items/{id}")
+    @GetMapping("/item/{id}")
     public ResponseEntity<FoodItemResponse> getFoodItemById(@PathVariable Long id) {
         FoodItemResponse item = adminFoodService.getFoodItemById(id);
         return ResponseEntity.ok(item);
@@ -217,7 +217,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @PutMapping("/items/{id}")
+    @PutMapping("/item/{id}")
     public ResponseEntity<FoodItemResponse> updateFoodItem(
             @PathVariable Long id,
             @Valid @RequestBody FoodItemRequest request) {
@@ -233,14 +233,7 @@ public class AdminFoodController {
             parameters = {@Parameter(name = "id", description = "ID of the food item to delete")})
 
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Food item deleted successfully",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
-                        {
-                          "statusCode": 204
-                          "message": "Item Deleted successfully",
-                          "details": ["Food item with ID deleted "]
-                        }
-                    """))),
+
             @ApiResponse(responseCode = "404", description = "Food item not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
                         {
@@ -250,7 +243,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @DeleteMapping("/items/{id}")
+    @DeleteMapping("/item/{id}")
     public ResponseEntity<Void> deleteFoodItem(@PathVariable Long id) {
         adminFoodService.deleteFoodItem(id);
         return ResponseEntity.noContent().build();
@@ -402,7 +395,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @PostMapping("/menus")
+    @PostMapping("/menu")
     public ResponseEntity<AdminFoodMenuResponse> createFoodMenu(
             @Valid @RequestBody FoodMenuRequest request) {
         AdminFoodMenuResponse response = adminFoodService.createFoodMenu(request);
@@ -431,7 +424,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @GetMapping("/menus")
+    @GetMapping("/menu")
     public ResponseEntity<List<AdminFoodMenuResponse>> getAllFoodMenus() {
         List<AdminFoodMenuResponse> menus = adminFoodService.getAllFoodMenus();
         return ResponseEntity.ok(menus);
@@ -468,7 +461,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @GetMapping("/menus/{id}")
+    @GetMapping("/menu/{id}")
     public ResponseEntity<AdminFoodMenuResponse> getFoodMenuById(@PathVariable Long id) {
         AdminFoodMenuResponse menu = adminFoodService.getFoodMenuById(id);
         return ResponseEntity.ok(menu);
@@ -497,7 +490,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @GetMapping("/menus/day/{day}")
+    @GetMapping("/menu/day/{day}")
     public ResponseEntity<List<AdminFoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
         List<AdminFoodMenuResponse> menus = adminFoodService.getMenusForDay(day);
         return ResponseEntity.ok(menus);
@@ -546,7 +539,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @PutMapping("/menus/{id}")
+    @PutMapping("/menu/{id}")
     public ResponseEntity<AdminFoodMenuResponse> updateFoodMenu(
             @PathVariable Long id,
             @Valid @RequestBody FoodMenuRequest request) {
@@ -558,8 +551,7 @@ public class AdminFoodController {
     @Operation(summary = "Delete food menu", description = "Deletes a food menu by ID",
             parameters = {@Parameter(name = "id", description = "ID of the food menu to delete")})
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Food menu deleted successfully",
-                    content = @Content),
+
             @ApiResponse(responseCode = "404", description = "Menu not found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(example = """
                         {
@@ -569,7 +561,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @DeleteMapping("/menus/{id}")
+    @DeleteMapping("/menu/{id}")
     public ResponseEntity<Void> deleteFoodMenu(@PathVariable Long id) {
         adminFoodService.deleteFoodMenu(id);
         return ResponseEntity.noContent().build();
@@ -609,7 +601,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @PostMapping("/menus/{menuId}/items/{foodItemId}")
+    @PostMapping("/menu/{menuId}/item/{foodItemId}")
     public ResponseEntity<AdminFoodMenuResponse> addFoodItemToMenu(
             @PathVariable Long menuId,
             @PathVariable Long foodItemId) {
@@ -643,7 +635,7 @@ public class AdminFoodController {
                         }
                     """)))
     })
-    @DeleteMapping("/menus/{menuId}/items/{foodItemId}")
+    @DeleteMapping("/menu/{menuId}/item/{foodItemId}")
     public ResponseEntity<AdminFoodMenuResponse> removeFoodItemFromMenu(
             @PathVariable Long menuId,
             @PathVariable Long foodItemId) {

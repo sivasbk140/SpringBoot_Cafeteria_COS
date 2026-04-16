@@ -22,7 +22,7 @@ import java.util.List;
 @Tag(name = "Delivery Staff Order APIs", description = "APIs for delivery staff to view assigned orders and mark them as delivered")
 @Slf4j
 @RestController
-@RequestMapping("/api/delivery/orders")
+@RequestMapping("/api/delivery/order")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class DeliveryStaffOrderController {
@@ -51,7 +51,7 @@ public class DeliveryStaffOrderController {
                         }
                     """)))
     })
-    @GetMapping("/assigned/{staffId}")
+    @GetMapping("/assignedstaff/{staffId}")
     public ResponseEntity<List<OrderSummaryDetailDto>> getAssignedOrders(@PathVariable Long staffId) {
         log.info("GET /api/delivery/orders/assigned/{} - fetching assigned orders", staffId);
         return ResponseEntity.ok(deliveryStaffOrderService.getAssignedOrders(staffId));

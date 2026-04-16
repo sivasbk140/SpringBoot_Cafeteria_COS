@@ -29,7 +29,8 @@ public class DeliveryDetail {
      * Unique identifier for this delivery detail record.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "delivery_detail_seq")
+    @SequenceGenerator(name = "delivery_detail_seq", sequenceName = "delivery_detail_seq", allocationSize = 1)
     private Long id;
 
     /**

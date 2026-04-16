@@ -29,7 +29,8 @@ public class FoodMenuItemMap {
      * Unique identifier for this menu-item mapping.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "food_menu_item_map_seq")
+    @SequenceGenerator(name = "food_menu_item_map_seq", sequenceName = "food_menu_item_map_seq", allocationSize = 1)
     private Long id;
 
     /**

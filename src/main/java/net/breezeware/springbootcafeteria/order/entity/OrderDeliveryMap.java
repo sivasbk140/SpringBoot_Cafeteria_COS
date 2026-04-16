@@ -30,7 +30,8 @@ public class OrderDeliveryMap {
      * Unique identifier for this delivery record.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_delivery_map_seq")
+    @SequenceGenerator(name = "order_delivery_map_seq", sequenceName = "order_delivery_map_seq", allocationSize = 1)
     private Long id;
 
     /**

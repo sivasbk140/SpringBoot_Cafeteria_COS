@@ -59,7 +59,7 @@ public class CustomerFoodController {
                         }
                     """)))
     })
-    @GetMapping("/menus/day/{day}")
+    @GetMapping("/menu/day/{day}")
     public ResponseEntity<List<CustomerFoodMenuResponse>> getMenusForDay(@PathVariable MenuDay day) {
         List<CustomerFoodMenuResponse> menus = customerFoodService.getMenusForDay(day);
         return ResponseEntity.ok(menus);

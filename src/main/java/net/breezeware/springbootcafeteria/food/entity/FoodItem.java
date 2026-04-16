@@ -27,7 +27,8 @@ public class FoodItem {
      * Unique identifier for the food item.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "food_item_seq")
+    @SequenceGenerator(name = "food_item_seq", sequenceName = "food_item_seq", allocationSize = 1)
     private Long id;
 
     /**

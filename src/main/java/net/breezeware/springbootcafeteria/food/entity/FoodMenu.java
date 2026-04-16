@@ -36,7 +36,8 @@ public class FoodMenu {
      * Unique identifier for the food menu.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "food_menu_seq")
+    @SequenceGenerator(name = "food_menu_seq", sequenceName = "food_menu_seq", allocationSize = 1)
     private Long id;
 
     /**
